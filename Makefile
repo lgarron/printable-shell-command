@@ -7,9 +7,12 @@ format: setup
 	bun x @biomejs/biome check --write
 
 # https://github.com/lgarron/repo
-REPO_COMMANDS = setup publish
+REPO_COMMANDS = publish
 
 publish: setup
 
 ${REPO_COMMANDS}:
 	repo $@
+
+setup:
+	bun install --no-save
