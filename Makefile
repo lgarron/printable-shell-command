@@ -11,6 +11,7 @@ REPO_COMMANDS = publish
 
 publish: setup
 
+.PHONY: ${REPO_COMMANDS}
 ${REPO_COMMANDS}:
 	repo $@
 
