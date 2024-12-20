@@ -87,9 +87,18 @@ export class PrintableShellCommand {
 		return [this.commandName, ...this.args.flat()];
 	}
 
+	// Convenient alias for `toFlatCommand()`.
+	public forBun(): string[] {
+		return this.toFlatCommand();
+	}
 	// For use with `node:child_process`
 	public toCommandWithFlatArgs(): [string, string[]] {
 		return [this.commandName, this.args.flat()];
+	}
+
+	// Convenient alias for `toCommandWithFlatArgs()`.
+	public forNode(): [string, string[]] {
+		return this.toCommandWithFlatArgs();
 	}
 
 	#escapeArg(
