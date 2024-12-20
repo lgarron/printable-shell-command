@@ -63,10 +63,10 @@ await spawn({ cmd: command.toFlatCommand() }).exited;
 
 Any command or argument containing the following characters is quoted and escaped:
 
-- space character
-- `"`
-- `'`
-- <code>`</code>
+- <code> </code> (space character)
+- `"` (double quote)
+- `'` (single quote)
+- <code>`</code> (backtick)
 - `|`
 - `$`
 - `*`
