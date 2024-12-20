@@ -66,7 +66,7 @@ Any command or argument containing the following characters is quoted and escape
 - space character
 - `"`
 - `'`
-- `\``
+- <code>`</code>
 - `|`
 - `$`
 - `*`
