@@ -56,7 +56,7 @@ const child_process = spawn(...command.toCommandWithFlatArgs());
 import { command } from "./example";
 import { spawn } from "bun";
 
-await spawn({ cmd: command.toFlatCommand() }).exited;
+await spawn(command.toFlatCommand()).exited;
 ```
 
 ## Protections

@@ -9,4 +9,4 @@ const command = new PrintableShellCommand("ffmpeg", [
 ]);
 
 command.print();
-await spawn({ cmd: command.toFlatCommand() }).exited;
+await spawn(command.toFlatCommand()).exited;
