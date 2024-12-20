@@ -17,9 +17,10 @@ Point 1 is difficult, and maybe even impossible. This library will do its best, 
 Construct a command by providing a command string and a list of arguments. Each argument can either be an individual string, or a "pair" list containing two strings (usually a command flag and its argument). Pairs do not affect the semantics of the command, but they affect pretty-printing.
 
 ```typescript
+// example.ts
 import { PrintableShellCommand } from "printable-shell-command";
 
-const command = new PrintableShellCommand("ffmpeg", [
+export const command = new PrintableShellCommand("ffmpeg", [
   ["-i", "./test/My video.mp4"],
   ["-filter:v", "setpts=2.0*PTS"],
   ["-filter:a", "atempo=0.5"],
@@ -29,18 +30,30 @@ const command = new PrintableShellCommand("ffmpeg", [
 command.print();
 ```
 
-### In `node`
+This prints:
+
+```shell
+ffmpeg \
+    -i './test/My video.mp4' \
+    -filter:v 'setpts=2.0*PTS' \
+    -filter:a atempo=0.5 \
+    './test/My video (slow-mo).mov'
+```
+
+### Spawn a process in `node`
 
 ```typescript
+import { command } from "./example";
 import { spawn } from "node:child_process";
 
 // Note the `...`
 const child_process = spawn(...command.toCommandWithFlatArgs());
 ```
 
-### With `bun`
+### Spawn a process in `bun`
 
 ```typescript
+import { command } from "./example";
 import { spawn } from "bun";
 
 await spawn({ cmd: command.toFlatCommand() }).exited;
