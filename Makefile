@@ -5,3 +5,9 @@ lint:
 .PHONY: format
 format:
 	bun x @biomejs/biome check --write
+
+# https://github.com/lgarron/repo
+REPO_COMMANDS = setup publish
+
+${REPO_COMMANDS}:
+	repo $@
