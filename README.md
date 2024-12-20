@@ -1,6 +1,6 @@
 # `printable-shell-command`
 
-A helper class to construct shell command in a way that allows printing them.
+A helper class to construct shell commands in a way that allows printing them.
 
 The goal is to make it easy to print commands that are bring run by a program, in a way that makes it easy and safe for a user to copy-and-paste.
 
