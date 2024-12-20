@@ -4,11 +4,11 @@ A helper class to construct shell commands in a way that allows printing them.
 
 The goal is to make it easy to print commands that are bring run by a program, in a way that makes it easy and safe for a user to copy-and-paste.
 
-Goals:
+## Goals
 
 1. Security — the printed commands should be possible to use in all shells without injection vulnerabilities.
-2. Fidelity — The printed command must match the arguments provided.
-3.
+2. Fidelity — the printed command must match the arguments provided.
+3. Aesthetics — the command is pretty-printed to make it easy to read and to avoid escaping/quoting simple arguments where humans usually would not.
 
 Point 1 is difficult, and maybe even impossible. This library will do its best, but what you don't know can hurt you.
 
