@@ -2,7 +2,7 @@
 
 A helper class to construct shell commands in a way that allows printing them.
 
-The goal is to make it easy to print commands that are bring run by a program, in a way that makes it easy and safe for a user to copy-and-paste.
+The goal is to make it easy to print commands that are being run by a program, in a way that makes it easy and safe for a user to copy-and-paste.
 
 ## Goals
 
