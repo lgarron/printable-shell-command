@@ -15,5 +15,6 @@ publish: setup
 ${REPO_COMMANDS}:
 	repo $@
 
+.PHONY: setup
 setup:
-	bun install --no-save
+	bun install --frozen-lockfile
