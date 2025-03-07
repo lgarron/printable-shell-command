@@ -9,7 +9,7 @@
 			"import": "./src/index.ts"
 		}
 	},
-	"dependencies": {
+	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@types/bun": "^1.1.14",
 		"@types/node": "^22.10.2"
