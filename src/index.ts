@@ -52,14 +52,16 @@ const SPECIAL_SHELL_CHARACTERS_FOR_MAIN_COMMAND =
 	SPECIAL_SHELL_CHARACTERS.union(new Set(["="]));
 
 export class PrintableShellCommand {
+	#commandName: string;
 	constructor(
-		private commandName: string,
+		commandName: string,
 		private args: Args = [],
 	) {
 		if (!isString(commandName)) {
 			// biome-ignore lint/suspicious/noExplicitAny: We want to print this, no matter what it is.
 			throw new Error("Command name is not a string:", commandName as any);
 		}
+		this.#commandName = commandName;
 		if (typeof args === "undefined") {
 			return;
 		}
@@ -81,6 +83,10 @@ export class PrintableShellCommand {
 			}
 			throw new Error(`Invalid arg entry at index: ${i}`);
 		}
+	}
+
+	get commandName(): string {
+		return this.#commandName;
 	}
 
 	// For use with `bun`.
