@@ -43,19 +43,20 @@ ffmpeg \
 ### Spawn a process in `node`
 
 ```typescript
-import { command } from "./example";
+import { PrintableShellCommand } from "printable-shell-command";
 import { spawn } from "node:child_process";
 
-// Note the `...`
-const child_process = spawn(...command.toCommandWithFlatArgs());
+const command = new PrintableShellCommand(/* … */);
+const child_process = spawn(...command.toCommandWithFlatArgs()); // Note the `...`
 ```
 
 ### Spawn a process in `bun`
 
 ```typescript
-import { command } from "./example";
+import { PrintableShellCommand } from "printable-shell-command";
 import { spawn } from "bun";
 
+const command = new PrintableShellCommand(/* … */);
 await spawn(command.toFlatCommand()).exited;
 ```
 

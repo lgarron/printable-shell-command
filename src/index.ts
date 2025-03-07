@@ -83,19 +83,58 @@ export class PrintableShellCommand {
 		}
 	}
 
+	// For use with `bun`.
+	//
+	// Usage example:
+	//
+	//     import { PrintableShellCommand } from "printable-shell-command";
+	//     import { spawn } from "bun";
+	//
+	//     const command = new PrintableShellCommand(/* … */);
+	//     await spawn(command.toFlatCommand()).exited;
+	//
 	public toFlatCommand(): string[] {
 		return [this.commandName, ...this.args.flat()];
 	}
 
 	// Convenient alias for `toFlatCommand()`.
+	//
+	// Usage example:
+	//
+	//     import { PrintableShellCommand } from "printable-shell-command";
+	//     import { spawn } from "bun";
+	//
+	//     const command = new PrintableShellCommand(/* … */);
+	//     await spawn(command.forBun()).exited;
+	//
 	public forBun(): string[] {
 		return this.toFlatCommand();
 	}
+
 	// For use with `node:child_process`
+	//
+	// Usage example:
+	//
+	//     import { PrintableShellCommand } from "printable-shell-command";
+	//    import { spawn } from "node:child_process";
+	//
+	//    const command = new PrintableShellCommand(/* … */);
+	//    const child_process = spawn(...command.toCommandWithFlatArgs()); // Note the `...`
+	//
 	public toCommandWithFlatArgs(): [string, string[]] {
 		return [this.commandName, this.args.flat()];
 	}
 
+	// For use with `node:child_process`
+	//
+	// Usage example:
+	//
+	//     import { PrintableShellCommand } from "printable-shell-command";
+	//    import { spawn } from "node:child_process";
+	//
+	//    const command = new PrintableShellCommand(/* … */);
+	//    const child_process = spawn(...command.forNode()); // Note the `...`
+	//
 	// Convenient alias for `toCommandWithFlatArgs()`.
 	public forNode(): [string, string[]] {
 		return this.toCommandWithFlatArgs();
