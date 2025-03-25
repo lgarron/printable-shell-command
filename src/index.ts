@@ -49,7 +49,8 @@ const SPECIAL_SHELL_CHARACTERS = new Set([
 
 // https://mywiki.wooledge.org/BashGuide/SpecialCharacters
 const SPECIAL_SHELL_CHARACTERS_FOR_MAIN_COMMAND =
-	SPECIAL_SHELL_CHARACTERS.union(new Set(["="]));
+	// biome-ignore lint/suspicious/noExplicitAny: Workaround to make this package easier to use in a project that otherwise only uses ES2022.)
+	(SPECIAL_SHELL_CHARACTERS as unknown as any).union(new Set(["="]));
 
 export class PrintableShellCommand {
 	#commandName: string;
@@ -157,7 +158,9 @@ export class PrintableShellCommand {
 			: SPECIAL_SHELL_CHARACTERS;
 		if (
 			options?.quoting === "extra-safe" ||
-			argCharacters.intersection(specialShellCharacters).size > 0
+			// biome-ignore lint/suspicious/noExplicitAny: Workaround to make this package easier to use in a project that otherwise only uses ES2022.)
+			(argCharacters as unknown as any).intersection(specialShellCharacters)
+				.size > 0
 		) {
 			// Use single quote to reduce the need to escape (and therefore reduce the chance for bugs/security issues).
 			const escaped = arg.replaceAll("\\", "\\\\").replaceAll("'", "\\'");
