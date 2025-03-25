@@ -149,7 +149,7 @@ export class PrintableShellCommand {
 	#escapeArg(
 		arg: string,
 		isMainCommand: boolean,
-		options: PrintOptions,
+		options?: PrintOptions,
 	): string {
 		const argCharacters = new Set(arg);
 		const specialShellCharacters = isMainCommand
