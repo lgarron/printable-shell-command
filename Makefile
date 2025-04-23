@@ -1,3 +1,6 @@
+.PHONY: test
+test: lint test-js
+
 .PHONY: lint
 lint: setup
 	bun x @biomejs/biome check
@@ -5,6 +8,10 @@ lint: setup
 .PHONY: format
 format: setup
 	bun x @biomejs/biome check --write
+
+.PHONY: test-js
+test-js: setup
+	bun test
 
 # https://github.com/lgarron/repo
 REPO_COMMANDS = publish
