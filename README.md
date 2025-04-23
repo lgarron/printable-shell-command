@@ -34,10 +34,10 @@ This prints:
 
 ```shell
 ffmpeg \
-    -i './test/My video.mp4' \
-    -filter:v 'setpts=2.0*PTS' \
-    -filter:a atempo=0.5 \
-    './test/My video (slow-mo).mov'
+  -i './test/My video.mp4' \
+  -filter:v 'setpts=2.0*PTS' \
+  -filter:a atempo=0.5 \
+  './test/My video (slow-mo).mov'
 ```
 
 ### Spawn a process in `node`
