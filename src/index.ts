@@ -1,5 +1,9 @@
+const DEFAULT_MAIN_INDENTATION = "";
+const DEFAULT_ARG_INDENTATION = "  ";
+const DEFAULT_ARGUMENT_LINE_WRAPPING = "by-entry";
+
 const INLINE_SEPARATOR = " ";
-const LINE_WRAP_SEPARATOR = " \\\n  ";
+const LINE_WRAP_LINE_END = " \\\n";
 
 // biome-ignore lint/suspicious/noExplicitAny: This is the correct type nere.
 function isString(s: any): s is string {
@@ -21,7 +25,12 @@ export interface PrintOptions {
 	// - "extra-safe": Quote all arguments, even ones that don't need it. This is
 	//   more likely to be safe under all circumstances.
 	quoting?: "auto" | "extra-safe";
-	lineWrap?: "none" | "by-entry";
+	// Line wrapping to use between arguments. Defaults to `"by-entry"`.
+	argumentLineWrapping?:
+		| "by-entry"
+		| "nested-by-entry"
+		| "by-argument"
+		| "inline";
 }
 
 // https://mywiki.wooledge.org/BashGuide/SpecialCharacters
@@ -150,7 +159,7 @@ export class PrintableShellCommand {
 	#escapeArg(
 		arg: string,
 		isMainCommand: boolean,
-		options?: PrintOptions,
+		options: PrintOptions,
 	): string {
 		const argCharacters = new Set(arg);
 		const specialShellCharacters = isMainCommand
@@ -169,46 +178,86 @@ export class PrintableShellCommand {
 		return arg;
 	}
 
-	#smallIndent(s: string, options?: PrintOptions): string {
-		return (options?.mainIndentation ?? "") + s;
+	#mainIndentation(options: PrintOptions): string {
+		return options?.mainIndentation ?? DEFAULT_MAIN_INDENTATION;
 	}
 
-	#bigIndent(s: string, options?: PrintOptions): string {
-		return this.#smallIndent((options?.argIndentation ?? "  ") + s, options);
+	#argIndentation(options: PrintOptions): string {
+		return (
+			this.#mainIndentation(options) +
+			(options?.argIndentation ?? DEFAULT_ARG_INDENTATION)
+		);
+	}
+
+	#lineWrapSeparator(options: PrintOptions): string {
+		return LINE_WRAP_LINE_END + this.#argIndentation(options);
+	}
+
+	#argPairSeparator(options: PrintOptions): string {
+		switch (options?.argumentLineWrapping ?? DEFAULT_ARGUMENT_LINE_WRAPPING) {
+			case "by-entry": {
+				return INLINE_SEPARATOR;
+			}
+			case "nested-by-entry": {
+				return this.#lineWrapSeparator(options) + this.#argIndentation(options);
+			}
+			case "by-argument": {
+				return this.#lineWrapSeparator(options);
+			}
+			case "inline": {
+				return INLINE_SEPARATOR;
+			}
+			default:
+				throw new Error("Invalid argument line wrapping argument.");
+		}
+	}
+
+	#entrySeparator(options: PrintOptions): string {
+		switch (options?.argumentLineWrapping ?? DEFAULT_ARGUMENT_LINE_WRAPPING) {
+			case "by-entry": {
+				return LINE_WRAP_LINE_END + this.#argIndentation(options);
+			}
+			case "nested-by-entry": {
+				return LINE_WRAP_LINE_END + this.#argIndentation(options);
+			}
+			case "by-argument": {
+				return LINE_WRAP_LINE_END + this.#argIndentation(options);
+			}
+			case "inline": {
+				return INLINE_SEPARATOR;
+			}
+			default:
+				throw new Error("Invalid argument line wrapping argument.");
+		}
 	}
 
 	public getPrintableCommand(options?: PrintOptions): string {
-		const lines: string[] = [];
+		// TODO: Why in the world does TypeScript not give the `options` arg the type of `PrintOptions | undefined`???
+		// biome-ignore lint/style/noParameterAssign: We want a default assignment without affecting the signature.
+		options ??= {};
+		const serializedEntries: string[] = [];
 
-		lines.push(
-			this.#smallIndent(
+		serializedEntries.push(
+			this.#mainIndentation(options) +
 				this.#escapeArg(this.commandName, true, options),
-				options,
-			),
 		);
 
-		// let pendingNewlineAfterPart = options?.separateLines === "dash-heuristic";
 		for (let i = 0; i < this.args.length; i++) {
 			const argsEntry = this.args[i];
 
 			if (isString(argsEntry)) {
-				lines.push(
-					this.#bigIndent(this.#escapeArg(argsEntry, false, options), options),
-				);
+				serializedEntries.push(this.#escapeArg(argsEntry, false, options));
 			} else {
 				const [part1, part2] = argsEntry;
-
-				lines.push(
-					this.#bigIndent(
-						this.#escapeArg(part1, false, options) +
-							INLINE_SEPARATOR +
-							this.#escapeArg(part2, false, options),
-						options,
-					),
+				serializedEntries.push(
+					this.#escapeArg(part1, false, options) +
+						this.#argPairSeparator(options) +
+						this.#escapeArg(part2, false, options),
 				);
 			}
 		}
-		return lines.join(LINE_WRAP_SEPARATOR);
+
+		return serializedEntries.join(this.#entrySeparator(options));
 	}
 
 	public print(options?: PrintOptions): void {
