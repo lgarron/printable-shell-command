@@ -25,3 +25,11 @@ ${REPO_COMMANDS}:
 .PHONY: setup
 setup:
 	bun install --frozen-lockfile
+
+.PHONY: clean
+clean:
+	# No-op
+
+.PHONY: reset
+reset: clean
+	rm -rf ./node_modules
