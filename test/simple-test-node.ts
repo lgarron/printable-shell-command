@@ -1,4 +1,5 @@
-import { PrintableShellCommand } from "../src";
+import { spawn } from "node:child_process";
+import { PrintableShellCommand } from "printable-shell-command";
 
 const command = new PrintableShellCommand("ffmpeg", [
 	["-i", "./test/My video.mp4"],
@@ -8,3 +9,9 @@ const command = new PrintableShellCommand("ffmpeg", [
 ]);
 
 command.print().shellOutNode();
+
+const child_process = spawn(...command.toCommandWithFlatArgs()); // Note the `...`
+
+// or directly
+await command.spawnNode().success;
+await command.spawnNodeInherit().success;

@@ -1,3 +1,4 @@
+import { spawn } from "bun";
 import { PrintableShellCommand } from "../src";
 
 const command = new PrintableShellCommand("ffmpeg", [
@@ -8,3 +9,8 @@ const command = new PrintableShellCommand("ffmpeg", [
 ]);
 
 await command.shellOutBun();
+await spawn(command.toFlatCommand()).exited;
+
+// or directly
+await command.spawnBun().success;
+await command.spawnBunInherit().success;

@@ -47,7 +47,7 @@ import { PrintableShellCommand } from "printable-shell-command";
 import { spawn } from "node:child_process";
 
 const command = new PrintableShellCommand(/* … */);
-const child_process = spawn(...command.toCommandWithFlatAr()); // Note the `...`
+const child_process = spawn(...command.toCommandWithFlatArgs()); // Note the `...`
 
 // or directly
 await command.spawnNode().success;
