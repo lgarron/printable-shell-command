@@ -7,6 +7,4 @@ const command = new PrintableShellCommand("ffmpeg", [
 	"./test/My video (slow-mo).mov",
 ]);
 
-command.print();
-
-await command.spawnNodeInherit().success;
+command.print().shellOutNode();

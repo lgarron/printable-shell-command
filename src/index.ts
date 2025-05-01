@@ -325,6 +325,18 @@ export class PrintableShellCommand {
 		return this.spawnNode({ ...options, stdio: "inherit" });
 	}
 
+	/** Equivalent to:
+	 *
+	 * ```
+	 *     await this.print().spawnNodeInherit().success;
+	 * ```
+	 */
+	public async shellOutNode(
+		options?: Omit<NodeSpawnOptions, "stdio">,
+	): Promise<void> {
+		await this.print().spawnNodeInherit(options).success;
+	}
+
 	// The returned subprocess includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
 	public spawnBun<
 		const In extends BunSpawnOptions.Writable = "ignore",
@@ -385,5 +397,23 @@ export class PrintableShellCommand {
 			...options,
 			stdio: ["inherit", "inherit", "inherit"],
 		});
+	}
+
+	/** Equivalent to:
+	 *
+	 * ```
+	 *     await this.print().spawnBunInherit().success;
+	 * ```
+	 */
+	public async shellOutBun(
+		options?: Omit<
+			Omit<
+				BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
+				"cmd"
+			>,
+			"stdio"
+		>,
+	): Promise<void> {
+		await this.print().spawnBunInherit(options).success;
 	}
 }
