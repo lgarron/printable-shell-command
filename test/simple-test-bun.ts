@@ -1,4 +1,3 @@
-import { spawn } from "bun";
 import { PrintableShellCommand } from "../src";
 
 const command = new PrintableShellCommand("ffmpeg", [
@@ -9,4 +8,6 @@ const command = new PrintableShellCommand("ffmpeg", [
 ]);
 
 command.print();
-await spawn(command.toFlatCommand()).exited;
+
+// Note that `ffmpeg` still returns successfully even if the user responds "no" to the overwrite prompt.
+command.spawnBun({ stdio: ["inherit", "inherit", "inherit"] });

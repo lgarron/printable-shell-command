@@ -282,14 +282,46 @@ export class PrintableShellCommand {
 		Stdout extends NodeStdioNull | NodeStdioPipe,
 		Stderr extends NodeStdioNull | NodeStdioPipe,
 	>(
-		options:
+		options?:
 			| NodeSpawnOptions
 			| NodeSpawnOptionsWithoutStdio
 			| NodeSpawnOptionsWithStdioTuple<Stdin, Stdout, Stderr>,
 	): // TODO: figure out how to return `ChildProcessByStdio<…>` without duplicating fragile boilerplate.
-	NodeChildProcess {
+	NodeChildProcess & { success: Promise<void> } {
 		const { spawn } = process.getBuiltinModule("node:child_process");
-		return spawn(...this.forNode(), options);
+		const subprocess = spawn(...this.forNode(), options) as NodeChildProcess & {
+			success: Promise<void>;
+		};
+		Object.defineProperty(subprocess, "success", {
+			get() {
+				return new Promise<void>((resolve, reject) =>
+					this.addListener(
+						"exit",
+						(exitCode: number /* we only use the first arg */) => {
+							if (exitCode === 0) {
+								resolve();
+							} else {
+								reject(`Command failed with non-zero exit code: ${exitCode}`);
+							}
+						},
+					),
+				);
+			},
+			enumerable: false,
+		});
+		return subprocess;
+	}
+
+	// A wrapper for `.spawnNode(…)` that sets stdio to `"inherit"` (common for
+	// invoking commands from scripts whose output and interaction should be
+	// surfaced to the user).
+	public spawnNodeInherit(
+		options?: Omit<NodeSpawnOptions, "stdio">,
+	): NodeChildProcess & { success: Promise<void> } {
+		if (options && "stdio" in options) {
+			throw new Error("Unexpected `stdio` field.");
+		}
+		return this.spawnNode({ ...options, stdio: "inherit" });
 	}
 
 	// The returned subprocess includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
@@ -300,6 +332,9 @@ export class PrintableShellCommand {
 	>(
 		options?: Omit<BunSpawnOptions.OptionsObject<In, Out, Err>, "cmd">,
 	): BunSubprocess<In, Out, Err> & { success: Promise<void> } {
+		if (options && "cmd" in options) {
+			throw new Error("Unexpected `cmd` field.");
+		}
 		const { spawn } = process.getBuiltinModule("bun") as typeof import("bun");
 		const subprocess = spawn({
 			...options,
@@ -313,7 +348,11 @@ export class PrintableShellCommand {
 							if (exitCode === 0) {
 								resolve();
 							} else {
-								reject("Command failed.");
+								reject(
+									new Error(
+										`Command failed with non-zero exit code: ${exitCode}`,
+									),
+								);
 							}
 						})
 						.catch(reject),
@@ -322,5 +361,28 @@ export class PrintableShellCommand {
 			enumerable: false,
 		});
 		return subprocess;
+	}
+
+	// A wrapper for `.spawnBunInherit(…)` that sets stdio to `"inherit"` (common for
+	// invoking commands from scripts whose output and interaction should be
+	// surfaced to the user).
+	public spawnBunInherit(
+		options?: Omit<
+			Omit<
+				BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
+				"cmd"
+			>,
+			"stdio"
+		>,
+	): BunSubprocess<"inherit", "inherit", "inherit"> & {
+		success: Promise<void>;
+	} {
+		if (options && "stdio" in options) {
+			throw new Error("Unexpected `stdio` field.");
+		}
+		return this.spawnBun({
+			...options,
+			stdio: ["inherit", "inherit", "inherit"],
+		});
 	}
 }

@@ -1,4 +1,3 @@
-import { spawn } from "node:child_process";
 import { PrintableShellCommand } from "../src";
 
 const command = new PrintableShellCommand("ffmpeg", [
@@ -9,6 +8,5 @@ const command = new PrintableShellCommand("ffmpeg", [
 ]);
 
 command.print();
-await new Promise((resolve, reject) => {
-	spawn(...command.toCommandWithFlatArgs()).addListener("exit", resolve);
-});
+
+await command.spawnNodeInherit().success;

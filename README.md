@@ -47,7 +47,11 @@ import { PrintableShellCommand } from "printable-shell-command";
 import { spawn } from "node:child_process";
 
 const command = new PrintableShellCommand(/* … */);
-const child_process = spawn(...command.toCommandWithFlatArgs()); // Note the `...`
+const child_process = spawn(...command.toCommandWithFlatAr()); // Note the `...`
+
+// or directly
+await command.spawnNode().success;
+await command.spawnNodeInherit().success;
 ```
 
 ### Spawn a process in `bun`
@@ -58,6 +62,10 @@ import { spawn } from "bun";
 
 const command = new PrintableShellCommand(/* … */);
 await spawn(command.toFlatCommand()).exited;
+
+// or directly
+await command.spawnBun().success;
+await command.spawnBunInherit().success;
 ```
 
 ## Protections
