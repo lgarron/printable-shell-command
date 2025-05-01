@@ -9,11 +9,13 @@
 			"import": "./src/index.ts"
 		}
 	},
-	"dependencies": {
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
 		"@types/bun": "^1.2.11",
 		"@types/node": "^22.15.3"
 	},
-	"devDependencies": {
-		"@biomejs/biome": "^1.9.4"
+	"optionalDependencies": {
+		"@types/bun": "^1.2.11",
+		"@types/node": "^22.15.3"
 	}
 }
