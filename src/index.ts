@@ -273,8 +273,9 @@ export class PrintableShellCommand {
 		return serializedEntries.join(this.#entrySeparator(options));
 	}
 
-	public print(options?: PrintOptions): void {
+	public print(options?: PrintOptions): PrintableShellCommand {
 		console.log(this.getPrintableCommand(options));
+		return this;
 	}
 
 	public spawnNode<

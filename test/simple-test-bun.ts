@@ -7,7 +7,4 @@ const command = new PrintableShellCommand("ffmpeg", [
 	"./test/My video (slow-mo).mov",
 ]);
 
-command.print();
-
-// Note that `ffmpeg` still returns successfully even if the user responds "no" to the overwrite prompt.
-command.spawnBun({ stdio: ["inherit", "inherit", "inherit"] });
+await command.print().spawnBunInherit().success;
