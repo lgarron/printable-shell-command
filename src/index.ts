@@ -278,6 +278,9 @@ export class PrintableShellCommand {
 		return this;
 	}
 
+	/**
+	 * The returned child process includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
+	 */
 	public spawnNode<
 		Stdin extends NodeStdioNull | NodeStdioPipe,
 		Stdout extends NodeStdioNull | NodeStdioPipe,
@@ -313,9 +316,9 @@ export class PrintableShellCommand {
 		return subprocess;
 	}
 
-	// A wrapper for `.spawnNode(…)` that sets stdio to `"inherit"` (common for
-	// invoking commands from scripts whose output and interaction should be
-	// surfaced to the user).
+	/** A wrapper for `.spawnNode(…)` that sets stdio to `"inherit"` (common for
+	 * invoking commands from scripts whose output and interaction should be
+	 * surfaced to the user). */
 	public spawnNodeInherit(
 		options?: Omit<NodeSpawnOptions, "stdio">,
 	): NodeChildProcess & { success: Promise<void> } {
@@ -337,7 +340,9 @@ export class PrintableShellCommand {
 		await this.print().spawnNodeInherit(options).success;
 	}
 
-	// The returned subprocess includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
+	/**
+	 * The returned subprocess includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
+	 */
 	public spawnBun<
 		const In extends BunSpawnOptions.Writable = "ignore",
 		const Out extends BunSpawnOptions.Readable = "pipe",
@@ -376,9 +381,11 @@ export class PrintableShellCommand {
 		return subprocess;
 	}
 
-	// A wrapper for `.spawnBunInherit(…)` that sets stdio to `"inherit"` (common for
-	// invoking commands from scripts whose output and interaction should be
-	// surfaced to the user).
+	/**
+	 * A wrapper for `.spawnBunInherit(…)` that sets stdio to `"inherit"` (common
+	 * for invoking commands from scripts whose output and interaction should be
+	 * surfaced to the user).
+	 */
 	public spawnBunInherit(
 		options?: Omit<
 			Omit<
@@ -397,6 +404,24 @@ export class PrintableShellCommand {
 			...options,
 			stdio: ["inherit", "inherit", "inherit"],
 		});
+	}
+
+	/** Equivalent to:
+	 *
+	 * ```
+	 *     new Response(this.spawnBun(options).stdout);
+	 * ```
+	 */
+	public spawnBunStdout(
+		options?: Omit<
+			Omit<
+				BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
+				"cmd"
+			>,
+			"stdio"
+		>,
+	): Response {
+		return new Response(this.spawnBun(options).stdout);
 	}
 
 	/** Equivalent to:
