@@ -1,3 +1,16 @@
+import type {
+	ChildProcess as NodeChildProcess,
+	SpawnOptions as NodeSpawnOptions,
+	SpawnOptionsWithStdioTuple as NodeSpawnOptionsWithStdioTuple,
+	SpawnOptionsWithoutStdio as NodeSpawnOptionsWithoutStdio,
+	StdioNull as NodeStdioNull,
+	StdioPipe as NodeStdioPipe,
+} from "node:child_process";
+import type {
+	SpawnOptions as BunSpawnOptions,
+	Subprocess as BunSubprocess,
+} from "bun";
+
 const DEFAULT_MAIN_INDENTATION = "";
 const DEFAULT_ARG_INDENTATION = "  ";
 const DEFAULT_ARGUMENT_LINE_WRAPPING = "by-entry";
@@ -262,5 +275,52 @@ export class PrintableShellCommand {
 
 	public print(options?: PrintOptions): void {
 		console.log(this.getPrintableCommand(options));
+	}
+
+	public spawnNode<
+		Stdin extends NodeStdioNull | NodeStdioPipe,
+		Stdout extends NodeStdioNull | NodeStdioPipe,
+		Stderr extends NodeStdioNull | NodeStdioPipe,
+	>(
+		options:
+			| NodeSpawnOptions
+			| NodeSpawnOptionsWithoutStdio
+			| NodeSpawnOptionsWithStdioTuple<Stdin, Stdout, Stderr>,
+	): // TODO: figure out how to return `ChildProcessByStdio<…>` without duplicating fragile boilerplate.
+	NodeChildProcess {
+		const { spawn } = process.getBuiltinModule("node:child_process");
+		return spawn(...this.forNode(), options);
+	}
+
+	// The returned subprocess includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
+	public spawnBun<
+		const In extends BunSpawnOptions.Writable = "ignore",
+		const Out extends BunSpawnOptions.Readable = "pipe",
+		const Err extends BunSpawnOptions.Readable = "inherit",
+	>(
+		options?: Omit<BunSpawnOptions.OptionsObject<In, Out, Err>, "cmd">,
+	): BunSubprocess<In, Out, Err> & { success: Promise<void> } {
+		const { spawn } = process.getBuiltinModule("bun") as typeof import("bun");
+		const subprocess = spawn({
+			...options,
+			cmd: this.forBun(),
+		}) as BunSubprocess<In, Out, Err> & { success: Promise<void> };
+		Object.defineProperty(subprocess, "success", {
+			get() {
+				return new Promise<void>((resolve, reject) =>
+					this.exited
+						.then((exitCode: number) => {
+							if (exitCode === 0) {
+								resolve();
+							} else {
+								reject("Command failed.");
+							}
+						})
+						.catch(reject),
+				);
+			},
+			enumerable: false,
+		});
+		return subprocess;
 	}
 }
