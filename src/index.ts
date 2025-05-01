@@ -293,6 +293,7 @@ export class PrintableShellCommand {
 	): // TODO: figure out how to return `ChildProcessByStdio<…>` without duplicating fragile boilerplate.
 	NodeChildProcess & { success: Promise<void> } {
 		const { spawn } = process.getBuiltinModule("node:child_process");
+		// @ts-ignore: The TypeScript checker has trouble reconciling the optional (i.e. potentially `undefined`) `options` with the third argument.
 		const subprocess = spawn(...this.forNode(), options) as NodeChildProcess & {
 			success: Promise<void>;
 		};
