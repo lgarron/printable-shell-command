@@ -1,6 +1,6 @@
 {
 	"name": "printable-shell-command",
-	"version": "0.1.0-pre2",
+	"version": "0.1.0-pre3",
 	"main": "./src/index.ts",
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
@@ -15,8 +15,8 @@
 	},
 	"exports": {
 		".": {
-			"types": "./dist/lib/printable-shell-command/index.js",
-			"import": "./dist/lib/printable-shell-command/index.d.ts"
+			"types": "./dist/lib/printable-shell-command/index.d.ts",
+			"import": "./dist/lib/printable-shell-command/index.js"
 		}
 	},
 	"files": [
