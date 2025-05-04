@@ -422,7 +422,8 @@ export class PrintableShellCommand {
 			"stdio"
 		>,
 	): Response {
-		return new Response(this.spawnBun(options).stdout);
+		// biome-ignore lint/suspicious/noExplicitAny: Avoid breaking the lib check when used without `@types/bun`.
+		return new Response((this.spawnBun(options) as any).stdout);
 	}
 
 	/** Equivalent to:
