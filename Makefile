@@ -1,3 +1,7 @@
+.PHONY: build
+build: setup
+	bun run script/build.ts
+
 .PHONY: test
 test: lint test-js
 
@@ -28,8 +32,8 @@ setup:
 
 .PHONY: clean
 clean:
-	# No-op
+	rm -rf ./dist/
 
 .PHONY: reset
 reset: clean
-	rm -rf ./node_modules
+	rm -rf ./node_modules/

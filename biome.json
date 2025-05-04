@@ -8,5 +8,9 @@
 		"rules": {
 			"recommended": true
 		}
+	},
+	"vcs": {
+		"clientKind": "git",
+		"enabled": true
 	}
 }

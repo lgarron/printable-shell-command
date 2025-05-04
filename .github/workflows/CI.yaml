@@ -12,3 +12,12 @@ jobs:
       - run: make setup
       - run: make lint
       - run: make test-js
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - run: make setup
+      - run: make build
