@@ -15,8 +15,8 @@
 	},
 	"exports": {
 		".": {
-			"types": "./dist/lib/printable-shell-command/index.js",
-			"import": "./dist/lib/printable-shell-command/index.d.ts"
+			"types": "./dist/lib/printable-shell-command/index.d.ts",
+			"import": "./dist/lib/printable-shell-command/index.js"
 		}
 	},
 	"files": [
