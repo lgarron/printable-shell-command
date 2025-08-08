@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/correctness/noUnusedVariables: This is an example. */
+
 import { spawn } from "node:child_process";
 import { PrintableShellCommand } from "printable-shell-command";
 

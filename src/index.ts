@@ -276,7 +276,6 @@ export class PrintableShellCommand {
 
   public getPrintableCommand(options?: PrintOptions): string {
     // TODO: Why in the world does TypeScript not give the `options` arg the type of `PrintOptions | undefined`???
-    // biome-ignore lint/style/noParameterAssign: We want a default assignment without affecting the signature.
     options ??= {};
     const serializedEntries: string[] = [];
 
