@@ -1,6 +1,6 @@
 {
 	"name": "printable-shell-command",
-	"version": "1.1.1",
+	"version": "1.1.2-dev",
 	"main": "./src/index.ts",
 	"devDependencies": {
 		"@biomejs/biome": "^2.1.4",
