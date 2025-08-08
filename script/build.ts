@@ -3,10 +3,10 @@ import { $ } from "bun";
 import { build } from "esbuild";
 
 await build({
-	...es2022,
-	entryPoints: ["src/index.ts"],
-	outdir: "./dist/lib/printable-shell-command/",
-	sourcemap: true,
+  ...es2022,
+  entryPoints: ["src/index.ts"],
+  outdir: "./dist/lib/printable-shell-command/",
+  sourcemap: true,
 });
 
 await $`bun x tsc --project .`;
