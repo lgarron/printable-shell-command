@@ -1,8 +1,8 @@
 import type {
 	ChildProcess as NodeChildProcess,
 	SpawnOptions as NodeSpawnOptions,
-	SpawnOptionsWithStdioTuple as NodeSpawnOptionsWithStdioTuple,
 	SpawnOptionsWithoutStdio as NodeSpawnOptionsWithoutStdio,
+	SpawnOptionsWithStdioTuple as NodeSpawnOptionsWithStdioTuple,
 	StdioNull as NodeStdioNull,
 	StdioPipe as NodeStdioPipe,
 } from "node:child_process";
@@ -30,15 +30,19 @@ type ArgsEntry = SingleArgument | FlagArgumentPair;
 type Args = ArgsEntry[];
 
 export interface PrintOptions {
-	mainIndentation?: string; // Defaults to ""
-	argIndentation?: string; // Defaults to "  "
-	// - "auto": Quote only arguments that need it for safety. This tries to be
-	//   portable and safe across shells, but true safety and portability is hard
-	//   to guarantee.
-	// - "extra-safe": Quote all arguments, even ones that don't need it. This is
-	//   more likely to be safe under all circumstances.
+	/** Defaults to "" */
+	mainIndentation?: string;
+	/** Defaults to "  " */
+	argIndentation?: string;
+	/**
+	 * - `"auto"`: Quote only arguments that need it for safety. This tries to be
+	 *   portable and safe across shells, but true safety and portability is hard
+	 *   to guarantee.
+	 * - `"extra-safe"`: Quote all arguments, even ones that don't need it. This is
+	 *   more likely to be safe under all circumstances.
+	 */
 	quoting?: "auto" | "extra-safe";
-	// Line wrapping to use between arguments. Defaults to `"by-entry"`.
+	/** Line wrapping to use between arguments. Defaults to `"by-entry"`. */
 	argumentLineWrapping?:
 		| "by-entry"
 		| "nested-by-entry"
@@ -112,59 +116,73 @@ export class PrintableShellCommand {
 		return this.#commandName;
 	}
 
-	// For use with `bun`.
-	//
-	// Usage example:
-	//
-	//     import { PrintableShellCommand } from "printable-shell-command";
-	//     import { spawn } from "bun";
-	//
-	//     const command = new PrintableShellCommand(/* … */);
-	//     await spawn(command.toFlatCommand()).exited;
-	//
+	/** For use with `bun`.
+	 *
+	 * Usage example:
+	 *
+	 * ```
+	 * import { PrintableShellCommand } from "printable-shell-command";
+	 * import { spawn } from "bun";
+	 *
+	 * const command = new PrintableShellCommand( … );
+	 * await spawn(command.toFlatCommand()).exited;
+	 * ```
+	 */
 	public toFlatCommand(): string[] {
 		return [this.commandName, ...this.args.flat()];
 	}
 
-	// Convenient alias for `toFlatCommand()`.
-	//
-	// Usage example:
-	//
-	//     import { PrintableShellCommand } from "printable-shell-command";
-	//     import { spawn } from "bun";
-	//
-	//     const command = new PrintableShellCommand(/* … */);
-	//     await spawn(command.forBun()).exited;
-	//
+	/**
+	 * Convenient alias for `toFlatCommand()`.
+	 *
+	 * Usage example:
+	 *
+	 * ```
+	 * import { PrintableShellCommand } from "printable-shell-command";
+	 * import { spawn } from "bun";
+	 *
+	 * const command = new PrintableShellCommand( … );
+	 * await spawn(command.forBun()).exited;
+	 * ```
+	 *
+	 * */
 	public forBun(): string[] {
 		return this.toFlatCommand();
 	}
 
-	// For use with `node:child_process`
-	//
-	// Usage example:
-	//
-	//     import { PrintableShellCommand } from "printable-shell-command";
-	//    import { spawn } from "node:child_process";
-	//
-	//    const command = new PrintableShellCommand(/* … */);
-	//    const child_process = spawn(...command.toCommandWithFlatArgs()); // Note the `...`
-	//
+	/**
+	 * For use with `node:child_process`
+	 *
+	 * Usage example:
+	 *
+	 * ```
+	 * import { PrintableShellCommand } from "printable-shell-command";
+	 * import { spawn } from "node:child_process";
+	 *
+	 * const command = new PrintableShellCommand( … );
+	 * const child_process = spawn(...command.toCommandWithFlatArgs()); // Note the `...`
+	 * ```
+	 *
+	 */
 	public toCommandWithFlatArgs(): [string, string[]] {
 		return [this.commandName, this.args.flat()];
 	}
 
-	// For use with `node:child_process`
-	//
-	// Usage example:
-	//
-	//     import { PrintableShellCommand } from "printable-shell-command";
-	//    import { spawn } from "node:child_process";
-	//
-	//    const command = new PrintableShellCommand(/* … */);
-	//    const child_process = spawn(...command.forNode()); // Note the `...`
-	//
-	// Convenient alias for `toCommandWithFlatArgs()`.
+	/**
+	 * For use with `node:child_process`
+	 *
+	 * Usage example:
+	 *
+	 * ```
+	 * import { PrintableShellCommand } from "printable-shell-command";
+	 * import { spawn } from "node:child_process";
+	 *
+	 * const command = new PrintableShellCommand( … );
+	 * const child_process = spawn(...command.forNode()); // Note the `...`
+	 * ```
+	 *
+	 * Convenient alias for `toCommandWithFlatArgs()`.
+	 */
 	public forNode(): [string, string[]] {
 		return this.toCommandWithFlatArgs();
 	}
@@ -332,7 +350,7 @@ export class PrintableShellCommand {
 	/** Equivalent to:
 	 *
 	 * ```
-	 *     await this.print().spawnNodeInherit().success;
+	 * await this.print().spawnNodeInherit().success;
 	 * ```
 	 */
 	public async shellOutNode(
@@ -410,7 +428,7 @@ export class PrintableShellCommand {
 	/** Equivalent to:
 	 *
 	 * ```
-	 *     new Response(this.spawnBun(options).stdout);
+	 * new Response(this.spawnBun(options).stdout);
 	 * ```
 	 */
 	public spawnBunStdout(
@@ -429,7 +447,7 @@ export class PrintableShellCommand {
 	/** Equivalent to:
 	 *
 	 * ```
-	 *     await this.print().spawnBunInherit().success;
+	 * await this.print().spawnBunInherit().success;
 	 * ```
 	 */
 	public async shellOutBun(
