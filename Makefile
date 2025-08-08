@@ -6,8 +6,15 @@ build: setup
 test: lint test-js
 
 .PHONY: lint
-lint: setup
+lint: setup lint-biome lint-tsc
+
+.PHONY: lint-biome
+lint-biome:
 	bun x @biomejs/biome check
+
+.PHONY: lint-tsc
+lint-tsc:
+	bun x tsc --project .
 
 .PHONY: format
 format: setup
