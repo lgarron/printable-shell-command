@@ -44,3 +44,7 @@ clean:
 .PHONY: reset
 reset: clean
 	rm -rf ./node_modules/
+
+.PHONY: prepublishOnly
+prepublishOnly: clean build
+	

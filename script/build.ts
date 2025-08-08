@@ -9,4 +9,4 @@ await build({
   sourcemap: true,
 });
 
-await $`bun x tsc --project .`;
+await $`bun x tsc --project ./tsconfig.build.json`;
