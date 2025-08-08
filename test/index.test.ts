@@ -150,3 +150,16 @@ test("command with space is escaped by default", () => {
 		`'/Applications/My App.app/Contents/Resources/my-app'`,
 	);
 });
+
+test("stylin'", () => {
+	expect(
+		rsyncCommand.getPrintableCommand({ styleTextFormat: ["gray", "bold"] }),
+	).toEqual(
+		`\u001B[90m\u001B[1mrsync \\
+  -avz \\
+  --exclude .DS_Store \\
+  --exclude .git \\
+  ./dist/web/experiments.cubing.net/test/deploy/ \\
+  experiments.cubing.net:~/experiments.cubing.net/test/deploy/\u001B[22m\u001B[39m`,
+	);
+});

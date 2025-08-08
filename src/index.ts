@@ -6,6 +6,7 @@ import type {
 	StdioNull as NodeStdioNull,
 	StdioPipe as NodeStdioPipe,
 } from "node:child_process";
+import { styleText } from "node:util";
 import type {
 	SpawnOptions as BunSpawnOptions,
 	Subprocess as BunSubprocess,
@@ -48,6 +49,17 @@ export interface PrintOptions {
 		| "nested-by-entry"
 		| "by-argument"
 		| "inline";
+	/**
+	 * Style text using `node`'s [`styleText(…)`](https://nodejs.org/api/util.html#utilstyletextformat-text-options)
+	 *
+	 * Example usage:
+	 *
+	 * ```
+	 * new PrintableShellCommand("echo", ["hi"]).print({
+	 *   styleTextFormat: ["gray", "bold"],
+	 * });
+	 * */
+	styleTextFormat?: Parameters<typeof styleText>[0];
 }
 
 // https://mywiki.wooledge.org/BashGuide/SpecialCharacters
@@ -288,7 +300,11 @@ export class PrintableShellCommand {
 			}
 		}
 
-		return serializedEntries.join(this.#entrySeparator(options));
+		let text = serializedEntries.join(this.#entrySeparator(options));
+		if (options?.styleTextFormat) {
+			text = styleText(options.styleTextFormat, text);
+		}
+		return text;
 	}
 
 	public print(options?: PrintOptions): PrintableShellCommand {
