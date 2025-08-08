@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./node_modules/@cubing/dev-config/ts/es2022-types/no-dom/tsconfig.json",
+  "compilerOptions": {
+    // TODO: https://github.com/lgarron/printable-shell-command/issues/1
+    // Temporary workaround for https://github.com/oven-sh/bun/issues/21701
+    "skipLibCheck": true
+  },
+  "exclude": ["./test/"]
+}
