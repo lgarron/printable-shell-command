@@ -1,3 +1,4 @@
 {
-  "extends": "./tsconfig.jsonc"
+  "extends": "./node_modules/@cubing/dev-config/ts/es2022-types/no-dom/tsconfig.json",
+  "exclude": ["./test/"]
 }
