@@ -36,6 +36,8 @@ ${REPO_COMMANDS}:
 .PHONY: setup
 setup:
 	bun install --frozen-lockfile
+	cat node_modules/bun-types/globals.d.ts | tail +1011 | head -n 1
+	cat node_modules/bun-types/globals.d.ts | tail +1287 | head -n 1
 
 .PHONY: clean
 clean:
