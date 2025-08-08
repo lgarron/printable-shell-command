@@ -23,5 +23,8 @@
 		"./dist/",
 		"./src/"
 	],
-	"type": "module"
+	"type": "module",
+	"patchedDependencies": {
+		"bun-types@1.2.19": "patches/bun-types@1.2.19.patch"
+	}
 }
