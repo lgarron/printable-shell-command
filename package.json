@@ -5,12 +5,12 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.1.4",
 		"@cubing/dev-config": "^0.3.6",
-		"@types/bun": "^1.2.19",
+		"@types/bun": "^1.2.20",
 		"@types/node": "^24.2.0",
 		"esbuild": "^0.25.5"
 	},
 	"optionalDependencies": {
-		"@types/bun": "^1.2.19",
+		"@types/bun": "^1.2.20",
 		"@types/node": "^24.2.0"
 	},
 	"exports": {
@@ -26,8 +26,5 @@
 	"type": "module",
 	"scripts": {
 		"prepublishOnly": "make prepublishOnly"
-	},
-	"resolutions": {
-		"bun-types": "1.2.20-canary.20250808T140839"
 	}
 }
