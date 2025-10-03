@@ -91,6 +91,7 @@ Any command or argument containing the following characters is quoted and escape
 - `&`
 - `\`
 - `;`
+- `#`
 
 Additionally, a command is escaped if it contains an `=`.
 

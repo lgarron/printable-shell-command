@@ -83,6 +83,7 @@ const SPECIAL_SHELL_CHARACTERS = new Set([
   "&",
   "\\",
   ";",
+  "#",
 ]);
 
 // https://mywiki.wooledge.org/BashGuide/SpecialCharacters
