@@ -151,6 +151,12 @@ test("command with space is escaped by default", () => {
   );
 });
 
+test("command with equal sign is escaped by default", () => {
+  const command = new PrintableShellCommand("THIS_LOOKS_LIKE_AN=env-var");
+
+  expect(command.getPrintableCommand()).toEqual(`'THIS_LOOKS_LIKE_AN=env-var'`);
+});
+
 test("stylin'", () => {
   expect(
     rsyncCommand.getPrintableCommand({ styleTextFormat: ["gray", "bold"] }),
