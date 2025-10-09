@@ -184,3 +184,25 @@ test("more than 2 args in a group", () => {
   mainly in the plain`,
   );
 });
+
+test("don't line wrap after command", () => {
+  expect(
+    new PrintableShellCommand("echo", [
+      ["the", "rain", "in", "spain"],
+      "stays",
+      ["mainly", "in", "the", "plain"],
+    ]).getPrintableCommand({ skipLineWrapBeforeFirstArg: true }),
+  ).toEqual(
+    `echo the rain in spain \\
+  stays \\
+  mainly in the plain`,
+  );
+});
+
+test("don't line wrap after command (when there are no args)", () => {
+  expect(
+    new PrintableShellCommand("echo", []).getPrintableCommand({
+      skipLineWrapBeforeFirstArg: true,
+    }),
+  ).toEqual(`echo`);
+});

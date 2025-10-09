@@ -58,6 +58,8 @@ export interface PrintOptions {
     | "nested-by-entry"
     | "by-argument"
     | "inline";
+  /** Include the first arg (or first arg group) on the same line as the command, regardless of the `argumentLineWrapping` setting. */
+  skipLineWrapBeforeFirstArg?: true | false;
   /**
    * Style text using `node`'s [`styleText(…)`](https://nodejs.org/api/util.html#utilstyletextformat-text-options)
    *
@@ -260,14 +262,10 @@ export class PrintableShellCommand {
     }
   }
 
-  #entrySeparator(options: PrintOptions): string {
+  #intraEntrySeparator(options: PrintOptions): string {
     switch (options?.argumentLineWrapping ?? DEFAULT_ARGUMENT_LINE_WRAPPING) {
-      case "by-entry": {
-        return LINE_WRAP_LINE_END + this.#argIndentation(options);
-      }
-      case "nested-by-entry": {
-        return LINE_WRAP_LINE_END + this.#argIndentation(options);
-      }
+      case "by-entry":
+      case "nested-by-entry":
       case "by-argument": {
         return LINE_WRAP_LINE_END + this.#argIndentation(options);
       }
@@ -279,15 +277,23 @@ export class PrintableShellCommand {
     }
   }
 
+  #separatorAfterCommand(
+    options: PrintOptions,
+    numFollowingEntries: number,
+  ): string {
+    if (numFollowingEntries === 0) {
+      return "";
+    }
+    if (options.skipLineWrapBeforeFirstArg ?? false) {
+      return " ";
+    }
+    return this.#intraEntrySeparator(options);
+  }
+
   public getPrintableCommand(options?: PrintOptions): string {
     // TODO: Why in the world does TypeScript not give the `options` arg the type of `PrintOptions | undefined`???
     options ??= {};
     const serializedEntries: string[] = [];
-
-    serializedEntries.push(
-      this.#mainIndentation(options) +
-        this.#escapeArg(this.commandName, true, options),
-    );
 
     for (let i = 0; i < this.args.length; i++) {
       const argsEntry = this.args[i];
@@ -303,7 +309,11 @@ export class PrintableShellCommand {
       }
     }
 
-    let text = serializedEntries.join(this.#entrySeparator(options));
+    let text =
+      this.#mainIndentation(options) +
+      this.#escapeArg(this.commandName, true, options) +
+      this.#separatorAfterCommand(options, serializedEntries.length) +
+      serializedEntries.join(this.#intraEntrySeparator(options));
     if (options?.styleTextFormat) {
       text = styleText(options.styleTextFormat, text);
     }
