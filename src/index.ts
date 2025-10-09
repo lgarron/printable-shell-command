@@ -285,7 +285,7 @@ export class PrintableShellCommand {
       return "";
     }
     if (options.skipLineWrapBeforeFirstArg ?? false) {
-      return " ";
+      return INLINE_SEPARATOR;
     }
     return this.#intraEntrySeparator(options);
   }
