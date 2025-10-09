@@ -366,7 +366,7 @@ export class PrintableShellCommand {
   /** Equivalent to:
    *
    * ```
-   * await this.print().spawnNodeInherit().success;
+   * await this.print().spawnNodeInherit(…).success;
    * ```
    */
   public async shellOutNode(
@@ -444,7 +444,7 @@ export class PrintableShellCommand {
   /** Equivalent to:
    *
    * ```
-   * new Response(this.spawnBun(options).stdout);
+   * new Response(this.spawnBun(…).stdout);
    * ```
    */
   public spawnBunStdout(
@@ -463,7 +463,7 @@ export class PrintableShellCommand {
   /** Equivalent to:
    *
    * ```
-   * await this.print().spawnBunInherit().success;
+   * await this.print().spawnBunInherit(…).success;
    * ```
    */
   public async shellOutBun(
