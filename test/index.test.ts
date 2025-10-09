@@ -169,3 +169,18 @@ test("stylin'", () => {
   experiments.cubing.net:~/experiments.cubing.net/test/deploy/\u001B[22m\u001B[39m`,
   );
 });
+
+test("more than 2 args in a group", () => {
+  expect(
+    new PrintableShellCommand("echo", [
+      ["the", "rain", "in", "spain"],
+      "stays",
+      ["mainly", "in", "the", "plain"],
+    ]).getPrintableCommand(),
+  ).toEqual(
+    `echo \\
+  the rain in spain \\
+  stays \\
+  mainly in the plain`,
+  );
+});

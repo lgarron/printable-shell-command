@@ -23,11 +23,20 @@ const LINE_WRAP_LINE_END = " \\\n";
 function isString(s: any): s is string {
   return typeof s === "string";
 }
+// biome-ignore lint/suspicious/noExplicitAny: This is the correct type nere.
+function isStringArray(entries: any[]): entries is string[] {
+  for (const entry of entries) {
+    if (!isString(entry)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 // TODO: allow `.toString()`ables?
 type SingleArgument = string;
-type FlagArgumentPair = [string, string];
-type ArgsEntry = SingleArgument | FlagArgumentPair;
+type FlagArgumentGroup = string[];
+type ArgsEntry = SingleArgument | FlagArgumentGroup;
 type Args = ArgsEntry[];
 
 export interface PrintOptions {
@@ -113,12 +122,7 @@ export class PrintableShellCommand {
       if (typeof argEntry === "string") {
         continue;
       }
-      if (
-        Array.isArray(argEntry) &&
-        argEntry.length === 2 &&
-        isString(argEntry[0]) &&
-        isString(argEntry[1])
-      ) {
+      if (Array.isArray(argEntry) && isStringArray(argEntry)) {
         continue;
       }
       throw new Error(`Invalid arg entry at index: ${i}`);
@@ -291,11 +295,10 @@ export class PrintableShellCommand {
       if (isString(argsEntry)) {
         serializedEntries.push(this.#escapeArg(argsEntry, false, options));
       } else {
-        const [part1, part2] = argsEntry;
         serializedEntries.push(
-          this.#escapeArg(part1, false, options) +
-            this.#argPairSeparator(options) +
-            this.#escapeArg(part2, false, options),
+          argsEntry
+            .map((part) => this.#escapeArg(part, false, options))
+            .join(this.#argPairSeparator(options)),
         );
       }
     }
