@@ -6,6 +6,7 @@ import type {
   StdioNull as NodeStdioNull,
   StdioPipe as NodeStdioPipe,
 } from "node:child_process";
+import { Readable } from "node:stream";
 import { styleText } from "node:util";
 import type {
   SpawnOptions as BunSpawnOptions,
@@ -374,6 +375,19 @@ export class PrintableShellCommand {
       throw new Error("Unexpected `stdio` field.");
     }
     return this.spawnNode({ ...options, stdio: "inherit" });
+  }
+
+  public spawnNodeStdout(options?: Omit<NodeSpawnOptions, "stdio">): Response {
+    if (options && "stdio" in options) {
+      throw new Error("Unexpected `stdio` field.");
+    }
+    const subprocess = this.spawnNode({
+      ...options,
+      stdio: ["ignore", "pipe", "inherit"],
+    });
+
+    // biome-ignore lint/style/noNonNullAssertion: dude
+    return new Response(Readable.toWeb(subprocess.stdout!));
   }
 
   /** Equivalent to:
