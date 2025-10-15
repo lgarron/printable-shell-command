@@ -10,10 +10,10 @@ const command = new PrintableShellCommand("ffmpeg", [
   "./test/My video (slow-mo).mov",
 ]);
 
-command.print().shellOutNode();
+command.print().shellOut();
 
 const child_process = spawn(...command.toCommandWithFlatArgs()); // Note the `...`
 
 // or directly
-await command.spawnNode().success;
-await command.spawnNodeInherit().success;
+await command.spawn().success;
+await command.spawnInherit().success;

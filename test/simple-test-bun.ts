@@ -8,9 +8,9 @@ const command = new PrintableShellCommand("ffmpeg", [
   "./test/My video (slow-mo).mov",
 ]);
 
-await command.shellOutBun();
+await command.bun.shellOutBun();
 await spawn(command.toFlatCommand()).exited;
 
 // or directly
-await command.spawnBun().success;
-await command.spawnBunInherit().success;
+await command.bun.spawnBun().success;
+await command.bun.spawnBunInherit().success;

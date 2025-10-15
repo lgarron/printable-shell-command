@@ -50,8 +50,8 @@ const command = new PrintableShellCommand(/* … */);
 const child_process = spawn(...command.toCommandWithFlatArgs()); // Note the `...`
 
 // or directly
-await command.spawnNode().success;
-await command.spawnNodeInherit().success;
+await command.spawn().success;
+await command.spawnInherit().success;
 ```
 
 ### Spawn a process in `bun`
@@ -64,8 +64,8 @@ const command = new PrintableShellCommand(/* … */);
 await spawn(command.toFlatCommand()).exited;
 
 // or directly
-await command.spawnBun().success;
-await command.spawnBunInherit().success;
+await command.bun.spawnBun().success;
+await command.bun.spawnBunInherit().success;
 ```
 
 ## Protections
