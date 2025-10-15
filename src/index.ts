@@ -552,5 +552,3 @@ export class PrintableShellCommand {
     shellOutBun: this.#shellOutBun.bind(this),
   };
 }
-
-await new PrintableShellCommand("ls").shellOut({ cwd: Path.homedir });
