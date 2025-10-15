@@ -5,13 +5,17 @@ import type {
   SpawnOptionsWithStdioTuple as NodeSpawnOptionsWithStdioTuple,
   StdioNull as NodeStdioNull,
   StdioPipe as NodeStdioPipe,
+  ProcessEnvOptions,
 } from "node:child_process";
 import { Readable } from "node:stream";
 import { styleText } from "node:util";
 import type {
   SpawnOptions as BunSpawnOptions,
   Subprocess as BunSubprocess,
+  SpawnOptions,
 } from "bun";
+import { Path } from "path-class";
+import type { SetFieldType } from "type-fest";
 
 const DEFAULT_MAIN_INDENTATION = "";
 const DEFAULT_ARG_INDENTATION = "  ";
@@ -102,6 +106,20 @@ const SPECIAL_SHELL_CHARACTERS = new Set([
 const SPECIAL_SHELL_CHARACTERS_FOR_MAIN_COMMAND =
   // biome-ignore lint/suspicious/noExplicitAny: Workaround to make this package easier to use in a project that otherwise only uses ES2022.)
   (SPECIAL_SHELL_CHARACTERS as unknown as any).union(new Set(["="]));
+
+type NodeCwd = ProcessEnvOptions["cwd"] | Path;
+type NodeWithCwd<T extends { cwd?: ProcessEnvOptions["cwd"] }> = SetFieldType<
+  T,
+  "cwd",
+  NodeCwd | undefined
+>;
+
+// biome-ignore lint/suspicious/noExplicitAny: Just matching
+type BunCwd = SpawnOptions.OptionsObject<any, any, any>["cwd"] | Path;
+type BunWithCwd<
+  // biome-ignore lint/suspicious/noExplicitAny: Just matching
+  T extends { cwd?: SpawnOptions.OptionsObject<any, any, any>["cwd"] },
+> = SetFieldType<T, "cwd", BunCwd | undefined>;
 
 export class PrintableShellCommand {
   #commandName: string;
@@ -335,15 +353,26 @@ export class PrintableShellCommand {
     Stderr extends NodeStdioNull | NodeStdioPipe,
   >(
     options?:
-      | NodeSpawnOptions
-      | NodeSpawnOptionsWithoutStdio
-      | NodeSpawnOptionsWithStdioTuple<Stdin, Stdout, Stderr>,
+      | NodeWithCwd<NodeSpawnOptions>
+      | NodeWithCwd<NodeSpawnOptionsWithoutStdio>
+      | NodeWithCwd<NodeSpawnOptionsWithStdioTuple<Stdin, Stdout, Stderr>>,
   ): // TODO: figure out how to return `ChildProcessByStdio<…>` without duplicating fragile boilerplate.
   NodeChildProcess & { success: Promise<void> } {
     const { spawn } = process.getBuiltinModule("node:child_process");
+    const cwd = (() => {
+      if (typeof options?.cwd !== "undefined") {
+        if (options.cwd instanceof Path) {
+          return options.cwd.toString();
+        }
+      }
+      return options?.cwd;
+    })();
     // biome-ignore lint/suspicious/noTsIgnore: We don't want linting to depend on *broken* type checking.
     // @ts-ignore: The TypeScript checker has trouble reconciling the optional (i.e. potentially `undefined`) `options` with the third argument.
-    const subprocess = spawn(...this.forNode(), options) as NodeChildProcess & {
+    const subprocess = spawn(...this.forNode(), {
+      ...options,
+      cwd,
+    }) as NodeChildProcess & {
       success: Promise<void>;
     };
     Object.defineProperty(subprocess, "success", {
@@ -370,7 +399,7 @@ export class PrintableShellCommand {
    * invoking commands from scripts whose output and interaction should be
    * surfaced to the user). */
   public spawnInherit(
-    options?: Omit<NodeSpawnOptions, "stdio">,
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
   ): NodeChildProcess & { success: Promise<void> } {
     if (options && "stdio" in options) {
       throw new Error("Unexpected `stdio` field.");
@@ -378,7 +407,9 @@ export class PrintableShellCommand {
     return this.spawn({ ...options, stdio: "inherit" });
   }
 
-  public stdout(options?: Omit<NodeSpawnOptions, "stdio">): Response {
+  public stdout(
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
+  ): Response {
     if (options && "stdio" in options) {
       throw new Error("Unexpected `stdio` field.");
     }
@@ -398,7 +429,7 @@ export class PrintableShellCommand {
    * ```
    */
   public async shellOut(
-    options?: Omit<NodeSpawnOptions, "stdio">,
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
   ): Promise<void> {
     await this.print().spawnInherit(options).success;
   }
@@ -411,14 +442,25 @@ export class PrintableShellCommand {
     const Out extends BunSpawnOptions.Readable = "pipe",
     const Err extends BunSpawnOptions.Readable = "inherit",
   >(
-    options?: Omit<BunSpawnOptions.OptionsObject<In, Out, Err>, "cmd">,
+    options?: BunWithCwd<
+      Omit<BunSpawnOptions.OptionsObject<In, Out, Err>, "cmd">
+    >,
   ): BunSubprocess<In, Out, Err> & { success: Promise<void> } {
     if (options && "cmd" in options) {
       throw new Error("Unexpected `cmd` field.");
     }
     const { spawn } = process.getBuiltinModule("bun") as typeof import("bun");
+    const cwd = (() => {
+      if (typeof options?.cwd !== "undefined") {
+        if (options.cwd instanceof Path) {
+          return options.cwd.toString();
+        }
+      }
+      return options?.cwd;
+    })();
     const subprocess = spawn({
       ...options,
+      cwd,
       cmd: this.forBun(),
     }) as BunSubprocess<In, Out, Err> & { success: Promise<void> };
     Object.defineProperty(subprocess, "success", {
@@ -445,12 +487,11 @@ export class PrintableShellCommand {
   }
 
   #spawnBunInherit(
-    options?: Omit<
+    options?: BunWithCwd<
       Omit<
         BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
-        "cmd"
-      >,
-      "stdio"
+        "cmd" | "stdio"
+      >
     >,
   ): BunSubprocess<"inherit", "inherit", "inherit"> & {
     success: Promise<void>;
@@ -465,12 +506,11 @@ export class PrintableShellCommand {
   }
 
   #spawnBunStdout(
-    options?: Omit<
+    options?: BunWithCwd<
       Omit<
         BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
-        "cmd"
-      >,
-      "stdio"
+        "cmd" | "stdio"
+      >
     >,
   ): Response {
     // biome-ignore lint/suspicious/noExplicitAny: Avoid breaking the lib check when used without `@types/bun`.
@@ -478,12 +518,11 @@ export class PrintableShellCommand {
   }
 
   async #shellOutBun(
-    options?: Omit<
+    options?: BunWithCwd<
       Omit<
         BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
-        "cmd"
-      >,
-      "stdio"
+        "cmd" | "stdio"
+      >
     >,
   ): Promise<void> {
     await this.print().bun.spawnBunInherit(options).success;
@@ -513,3 +552,5 @@ export class PrintableShellCommand {
     shellOutBun: this.#shellOutBun.bind(this),
   };
 }
+
+await new PrintableShellCommand("ls").shellOut({ cwd: Path.homedir });
