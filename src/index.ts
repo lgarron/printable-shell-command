@@ -329,7 +329,7 @@ export class PrintableShellCommand {
   /**
    * The returned child process includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
    */
-  public spawnNode<
+  public spawn<
     Stdin extends NodeStdioNull | NodeStdioPipe,
     Stdout extends NodeStdioNull | NodeStdioPipe,
     Stderr extends NodeStdioNull | NodeStdioPipe,
@@ -369,20 +369,20 @@ export class PrintableShellCommand {
   /** A wrapper for `.spawnNode(…)` that sets stdio to `"inherit"` (common for
    * invoking commands from scripts whose output and interaction should be
    * surfaced to the user). */
-  public spawnNodeInherit(
+  public spawnInherit(
     options?: Omit<NodeSpawnOptions, "stdio">,
   ): NodeChildProcess & { success: Promise<void> } {
     if (options && "stdio" in options) {
       throw new Error("Unexpected `stdio` field.");
     }
-    return this.spawnNode({ ...options, stdio: "inherit" });
+    return this.spawn({ ...options, stdio: "inherit" });
   }
 
-  public spawnNodeStdout(options?: Omit<NodeSpawnOptions, "stdio">): Response {
+  public stdout(options?: Omit<NodeSpawnOptions, "stdio">): Response {
     if (options && "stdio" in options) {
       throw new Error("Unexpected `stdio` field.");
     }
-    const subprocess = this.spawnNode({
+    const subprocess = this.spawn({
       ...options,
       stdio: ["ignore", "pipe", "inherit"],
     });
@@ -394,13 +394,13 @@ export class PrintableShellCommand {
   /** Equivalent to:
    *
    * ```
-   * await this.print().spawnNodeInherit(…).success;
+   * await this.print().spawnInherit(…).success;
    * ```
    */
-  public async shellOutNode(
+  public async shellOut(
     options?: Omit<NodeSpawnOptions, "stdio">,
   ): Promise<void> {
-    await this.print().spawnNodeInherit(options).success;
+    await this.print().spawnInherit(options).success;
   }
 
   /**
@@ -506,7 +506,7 @@ export class PrintableShellCommand {
     /** Equivalent to:
      *
      * ```
-     * new Response(this.spawnBun(…).stdout);
+     * new Response(this.bun.spawnBun(…).stdout);
      * ```
      */
     spawnBunStdout: this.#spawnBunStdout.bind(this),
