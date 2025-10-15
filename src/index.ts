@@ -406,7 +406,7 @@ export class PrintableShellCommand {
   /**
    * The returned subprocess includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
    */
-  public spawnBun<
+  #spawnBun<
     const In extends BunSpawnOptions.Writable = "ignore",
     const Out extends BunSpawnOptions.Readable = "pipe",
     const Err extends BunSpawnOptions.Readable = "inherit",
@@ -444,12 +444,7 @@ export class PrintableShellCommand {
     return subprocess;
   }
 
-  /**
-   * A wrapper for `.spawnBunInherit(…)` that sets stdio to `"inherit"` (common
-   * for invoking commands from scripts whose output and interaction should be
-   * surfaced to the user).
-   */
-  public spawnBunInherit(
+  #spawnBunInherit(
     options?: Omit<
       Omit<
         BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
@@ -463,19 +458,13 @@ export class PrintableShellCommand {
     if (options && "stdio" in options) {
       throw new Error("Unexpected `stdio` field.");
     }
-    return this.spawnBun({
+    return this.bun.spawnBun({
       ...options,
       stdio: ["inherit", "inherit", "inherit"],
     });
   }
 
-  /** Equivalent to:
-   *
-   * ```
-   * new Response(this.spawnBun(…).stdout);
-   * ```
-   */
-  public spawnBunStdout(
+  #spawnBunStdout(
     options?: Omit<
       Omit<
         BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
@@ -485,16 +474,10 @@ export class PrintableShellCommand {
     >,
   ): Response {
     // biome-ignore lint/suspicious/noExplicitAny: Avoid breaking the lib check when used without `@types/bun`.
-    return new Response((this.spawnBun(options) as any).stdout);
+    return new Response((this.bun.spawnBun(options) as any).stdout);
   }
 
-  /** Equivalent to:
-   *
-   * ```
-   * await this.print().spawnBunInherit(…).success;
-   * ```
-   */
-  public async shellOutBun(
+  async #shellOutBun(
     options?: Omit<
       Omit<
         BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
@@ -503,6 +486,30 @@ export class PrintableShellCommand {
       "stdio"
     >,
   ): Promise<void> {
-    await this.print().spawnBunInherit(options).success;
+    await this.print().bun.spawnBunInherit(options).success;
   }
+
+  bun = {
+    /** Equivalent to:
+     *
+     * ```
+     * await this.print().bun.spawnBunInherit(…).success;
+     * ```
+     */
+    spawnBun: this.#spawnBun.bind(this),
+    /**
+     * A wrapper for `.spawnBunInherit(…)` that sets stdio to `"inherit"` (common
+     * for invoking commands from scripts whose output and interaction should be
+     * surfaced to the user).
+     */
+    spawnBunInherit: this.#spawnBunInherit.bind(this),
+    /** Equivalent to:
+     *
+     * ```
+     * new Response(this.spawnBun(…).stdout);
+     * ```
+     */
+    spawnBunStdout: this.#spawnBunStdout.bind(this),
+    shellOutBun: this.#shellOutBun.bind(this),
+  };
 }
