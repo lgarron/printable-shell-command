@@ -9,12 +9,12 @@ test: lint test-js
 lint: setup lint-biome lint-tsc
 
 .PHONY: lint-biome
-lint-biome:
+lint-biome: setup
 	bun x @biomejs/biome check
 
 .PHONY: lint-tsc
-lint-tsc:
-	bun x tsc --project .
+lint-tsc: setup
+	bun x tsc --noEmit --project .
 
 .PHONY: format
 format: setup
