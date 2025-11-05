@@ -29,7 +29,7 @@
 		"prepublishOnly": "make prepublishOnly"
 	},
 	"dependencies": {
-		"path-class": "^0.3.3",
+		"path-class": "^0.6.0",
 		"type-fest": "^5.1.0"
 	}
 }
