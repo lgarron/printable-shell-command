@@ -14,7 +14,7 @@ import type {
   Subprocess as BunSubprocess,
   SpawnOptions,
 } from "bun";
-import { Path } from "path-class";
+import { Path, stringifyIfPath } from "path-class";
 import type { SetFieldType } from "type-fest";
 
 const DEFAULT_MAIN_INDENTATION = "";
@@ -39,9 +39,8 @@ function isStringArray(entries: any[]): entries is string[] {
 }
 
 // TODO: allow `.toString()`ables?
-type SingleArgument = string;
-type FlagArgumentGroup = string[];
-type ArgsEntry = SingleArgument | FlagArgumentGroup;
+type SingleArgument = string | Path;
+type ArgsEntry = SingleArgument | SingleArgument[];
 type Args = ArgsEntry[];
 
 export interface PrintOptions {
@@ -167,7 +166,7 @@ export class PrintableShellCommand {
    * ```
    */
   public toFlatCommand(): string[] {
-    return [this.commandName, ...this.args.flat()];
+    return [this.commandName, ...this.args.flat().map(stringifyIfPath)];
   }
 
   /**
@@ -203,7 +202,7 @@ export class PrintableShellCommand {
    *
    */
   public toCommandWithFlatArgs(): [string, string[]] {
-    return [this.commandName, this.args.flat()];
+    return [this.commandName, this.args.flat().map(stringifyIfPath)];
   }
 
   /**
@@ -315,14 +314,16 @@ export class PrintableShellCommand {
     const serializedEntries: string[] = [];
 
     for (let i = 0; i < this.args.length; i++) {
-      const argsEntry = this.args[i];
+      const argsEntry = stringifyIfPath(this.args[i]);
 
       if (isString(argsEntry)) {
         serializedEntries.push(this.#escapeArg(argsEntry, false, options));
       } else {
         serializedEntries.push(
           argsEntry
-            .map((part) => this.#escapeArg(part, false, options))
+            .map((part) =>
+              this.#escapeArg(stringifyIfPath(part), false, options),
+            )
             .join(this.#argPairSeparator(options)),
         );
       }
@@ -359,14 +360,7 @@ export class PrintableShellCommand {
   ): // TODO: figure out how to return `ChildProcessByStdio<…>` without duplicating fragile boilerplate.
   NodeChildProcess & { success: Promise<void> } {
     const { spawn } = process.getBuiltinModule("node:child_process");
-    const cwd = (() => {
-      if (typeof options?.cwd !== "undefined") {
-        if (options.cwd instanceof Path) {
-          return options.cwd.toString();
-        }
-      }
-      return options?.cwd;
-    })();
+    const cwd = stringifyIfPath(options?.cwd);
     // biome-ignore lint/suspicious/noTsIgnore: We don't want linting to depend on *broken* type checking.
     // @ts-ignore: The TypeScript checker has trouble reconciling the optional (i.e. potentially `undefined`) `options` with the third argument.
     const subprocess = spawn(...this.forNode(), {
