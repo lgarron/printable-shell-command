@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test";
+import { open } from "node:fs/promises";
+import { Path } from "path-class";
 import { PrintableShellCommand } from "../src";
 
 const rsyncCommand = new PrintableShellCommand("rsync", [
@@ -205,4 +207,20 @@ test("don't line wrap after command (when there are no args)", () => {
       skipLineWrapBeforeFirstArg: true,
     }),
   ).toEqual(`echo`);
+});
+
+test("spawnDetached", async () => {
+  const tempDir = await Path.makeTempDir();
+  console.log(`Temp dir: ${tempDir}`);
+  const stdout = await open(tempDir.join("stdout.log").path, "a");
+  const stderr = await open(tempDir.join("stderr.log").path, "a");
+
+  new PrintableShellCommand("echo", ["hi"]).spawnDetached({
+    stdio: ["ignore", stdout.fd, stderr.fd],
+  });
+
+  // Wait a short while for the command to finish.
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  expect(await tempDir.join("stdout.log").readText()).toBe("hi\n");
 });
