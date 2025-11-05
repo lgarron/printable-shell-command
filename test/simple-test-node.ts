@@ -16,4 +16,4 @@ const child_process = spawn(...command.toCommandWithFlatArgs()); // Note the `..
 
 // or directly
 await command.spawn().success;
-await command.spawnInherit().success;
+await command.spawnTransparently().success;

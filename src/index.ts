@@ -397,14 +397,26 @@ export class PrintableShellCommand {
 
   /** A wrapper for `.spawn(…)` that sets stdio to `"inherit"` (common for
    * invoking commands from scripts whose output and interaction should be
-   * surfaced to the user). */
-  public spawnInherit(
+   * surfaced to the user).
+   *
+   * If there is no other interaction with the shell from the calling process,
+   * then it acts "transparent" and allows user to interact with the subprocess
+   * in its stead.
+   */
+  public spawnTransparently(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
   ): NodeChildProcess & { success: Promise<void> } {
     if (options && "stdio" in options) {
       throw new Error("Unexpected `stdio` field.");
     }
     return this.spawn({ ...options, stdio: "inherit" });
+  }
+
+  /** @deprecated: Use `.spawnTransparently(…)`. */
+  public spawnInherit(
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
+  ): NodeChildProcess & { success: Promise<void> } {
+    return this.spawnTransparently(options);
   }
 
   /** A wrapper for `.spawn(…)` that:
@@ -464,13 +476,13 @@ export class PrintableShellCommand {
   /** Equivalent to:
    *
    * ```
-   * await this.print().spawnInherit(…).success;
+   * await this.print().spawnTransparently(…).success;
    * ```
    */
   public async shellOut(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
   ): Promise<void> {
-    await this.print().spawnInherit(options).success;
+    await this.print().spawnTransparently(options).success;
   }
 
   /**
