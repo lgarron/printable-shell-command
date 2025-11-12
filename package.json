@@ -1,6 +1,6 @@
 {
 	"name": "printable-shell-command",
-	"version": "2.3.2",
+	"version": "2.3.3-dev",
 	"devDependencies": {
 		"@biomejs/biome": "^2.1.4",
 		"@cubing/dev-config": "^0.3.6",
