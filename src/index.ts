@@ -28,12 +28,17 @@ const LINE_WRAP_LINE_END = " \\\n";
 function isString(s: any): s is string {
   return typeof s === "string";
 }
-// biome-ignore lint/suspicious/noExplicitAny: This is the correct type nere.
-function isStringArray(entries: any[]): entries is string[] {
+
+// biome-ignore lint/suspicious/noExplicitAny: This is the correct type here.
+function isValidArgsEntryArray(entries: any[]): entries is SingleArgument[] {
   for (const entry of entries) {
-    if (!isString(entry)) {
-      return false;
+    if (isString(entry)) {
+      continue;
     }
+    if (entry instanceof Path) {
+      continue;
+    }
+    return false;
   }
   return true;
 }
@@ -142,7 +147,10 @@ export class PrintableShellCommand {
       if (typeof argEntry === "string") {
         continue;
       }
-      if (Array.isArray(argEntry) && isStringArray(argEntry)) {
+      if (argEntry instanceof Path) {
+        continue;
+      }
+      if (Array.isArray(argEntry) && isValidArgsEntryArray(argEntry)) {
         continue;
       }
       throw new Error(`Invalid arg entry at index: ${i}`);

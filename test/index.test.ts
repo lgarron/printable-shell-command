@@ -224,3 +224,15 @@ test("spawnDetached", async () => {
 
   expect(await tempDir.join("stdout.log").readText()).toBe("hi\n");
 });
+
+test("Path arg (unnested)", async () => {
+  const tempDir = await Path.makeTempDir();
+
+  await new PrintableShellCommand("ls", [tempDir]).shellOut();
+});
+
+test("Path arg (nested)", async () => {
+  const tempDir = await Path.makeTempDir();
+
+  await new PrintableShellCommand("ls", [[tempDir]]).shellOut();
+});
