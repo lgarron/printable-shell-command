@@ -247,3 +247,15 @@ test("`Path` arg (nested)", async () => {
 
   await new PrintableShellCommand("ls", [[tempDir]]).shellOut();
 });
+
+test("`Path` cwd", async () => {
+  const tempDir = await Path.makeTempDir();
+  await tempDir.join("foo.txt").write("foo");
+  await tempDir.join("bar.txt").write("bar");
+
+  expect(
+    await new PrintableShellCommand("ls", [tempDir]).stdout().text(),
+  ).toEqual(`bar.txt
+foo.txt
+`);
+});

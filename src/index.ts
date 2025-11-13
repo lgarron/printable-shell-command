@@ -122,7 +122,7 @@ type NodeWithCwd<T extends { cwd?: ProcessEnvOptions["cwd"] }> = SetFieldType<
 type BunCwd = SpawnOptions.OptionsObject<any, any, any>["cwd"] | Path;
 type BunWithCwd<
   // biome-ignore lint/suspicious/noExplicitAny: Just matching
-  T extends { cwd?: SpawnOptions.OptionsObject<any, any, any>["cwd"] },
+  T extends { cwd?: SpawnOptions.OptionsObject<any, any, any>["cwd"] | Path },
 > = SetFieldType<T, "cwd", BunCwd | undefined>;
 
 export class PrintableShellCommand {
@@ -503,14 +503,7 @@ export class PrintableShellCommand {
       throw new Error("Unexpected `cmd` field.");
     }
     const { spawn } = process.getBuiltinModule("bun") as typeof import("bun");
-    const cwd = (() => {
-      if (typeof options?.cwd !== "undefined") {
-        if (options.cwd instanceof Path) {
-          return options.cwd.toString();
-        }
-      }
-      return options?.cwd;
-    })();
+    const cwd = stringifyIfPath(options?.cwd);
     const subprocess = spawn({
       ...options,
       cwd,
