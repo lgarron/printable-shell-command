@@ -126,12 +126,12 @@ type BunWithCwd<
 > = SetFieldType<T, "cwd", BunCwd | undefined>;
 
 export class PrintableShellCommand {
-  #commandName: string;
+  #commandName: string | Path;
   constructor(
-    commandName: string,
+    commandName: string | Path,
     private args: Args = [],
   ) {
-    if (!isString(commandName)) {
+    if (!isString(commandName) && !(commandName instanceof Path)) {
       // biome-ignore lint/suspicious/noExplicitAny: We want to print this, no matter what it is.
       throw new Error("Command name is not a string:", commandName as any);
     }
@@ -158,7 +158,7 @@ export class PrintableShellCommand {
   }
 
   get commandName(): string {
-    return this.#commandName;
+    return stringifyIfPath(this.#commandName);
   }
 
   /** For use with `bun`.

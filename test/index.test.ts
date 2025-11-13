@@ -225,13 +225,24 @@ test("spawnDetached", async () => {
   expect(await tempDir.join("stdout.log").readText()).toBe("hi\n");
 });
 
-test("Path arg (unnested)", async () => {
+test("`Path` commandName", async () => {
+  const echoPath = new Path(
+    // Note that we need to use `which` instead of `command` here, because the latter binary does not have the same functionality as `command --search` in the shell.
+    (await new PrintableShellCommand("which", ["echo"]).stdout().text()).trim(),
+  );
+
+  await new PrintableShellCommand(echoPath, [
+    "from a `Path` commandName!",
+  ]).shellOut();
+});
+
+test("`Path` arg (unnested)", async () => {
   const tempDir = await Path.makeTempDir();
 
   await new PrintableShellCommand("ls", [tempDir]).shellOut();
 });
 
-test("Path arg (nested)", async () => {
+test("`Path` arg (nested)", async () => {
   const tempDir = await Path.makeTempDir();
 
   await new PrintableShellCommand("ls", [[tempDir]]).shellOut();
