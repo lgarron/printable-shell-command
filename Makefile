@@ -3,7 +3,7 @@ build: setup
 	bun run script/build.ts
 
 .PHONY: test
-test: lint test-js
+test: test-js lint
 
 .PHONY: lint
 lint: setup lint-biome lint-tsc
