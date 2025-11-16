@@ -475,6 +475,32 @@ export class PrintableShellCommand {
     return new Response(Readable.toWeb(subprocess.stdout!));
   }
 
+  /**
+   * Convenience function for:
+   *
+   *     .stdout(options).text()
+   *
+   * This can make some simple invocations easier to read and/or fit on a single line.
+   */
+  public text(
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
+  ): Promise<string> {
+    return this.stdout(options).text();
+  }
+
+  /**
+   * Convenience function for:
+   *
+   *     .stdout(options).json()
+   *
+   * This can make some simple invocations easier to read and/or fit on a single line.
+   */
+  public json<T>(
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
+  ): Promise<T> {
+    return this.stdout(options).json() as Promise<T>;
+  }
+
   /** Equivalent to:
    *
    * ```

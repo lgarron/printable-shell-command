@@ -259,3 +259,17 @@ test("`Path` cwd", async () => {
 foo.txt
 `);
 });
+
+test(".text()", async () => {
+  expect(await new PrintableShellCommand("echo", ["-n", "hi"]).text()).toEqual(
+    "hi",
+  );
+});
+
+test(".json()", async () => {
+  expect(
+    await new PrintableShellCommand("echo", ["-n", '{ "foo": 4 }']).json<{
+      foo: number;
+    }>(),
+  ).toEqual({ foo: 4 });
+});
