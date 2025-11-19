@@ -395,6 +395,7 @@ export class PrintableShellCommand {
     const writable =
       stream instanceof Writable ? stream : Writable.fromWeb(stream);
     writable.write(this.getPrintableCommand(optionsCopy));
+    writable.write("\n");
     return this;
   }
 

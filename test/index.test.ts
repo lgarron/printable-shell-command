@@ -280,37 +280,39 @@ test(".json()", async () => {
 const spyStderr = spyOn(stderr, "write");
 const spyStdout = spyOn(stdout, "write");
 
+const PLAIN_ECHO: [string][] = [["echo \\\n  hi"], ["\n"]];
+const BOLD_GRAY_ECHO: [string][] = [
+  ["\u001b[90m\u001b[1mecho \\\n  hi\u001b[22m\u001b[39m"],
+  ["\n"],
+];
+
 test("tty (stderr)", async () => {
   globalThis.process.stderr.isTTY = false;
   new PrintableShellCommand("echo", ["hi"]).print();
-  expect(spyStderr.mock.lastCall).toEqual(["echo \\\n  hi"]);
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
   expect(spyStdout.mock.lastCall).toEqual(undefined);
 
   globalThis.process.stderr.isTTY = false;
   new PrintableShellCommand("echo", ["hi"]).print({
     autoStyle: "tty",
   });
-  expect(spyStderr.mock.lastCall).toEqual(["echo \\\n  hi"]);
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
   new PrintableShellCommand("echo", ["hi"]).print({
     autoStyle: "never",
   });
-  expect(spyStderr.mock.lastCall).toEqual(["echo \\\n  hi"]);
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
 
   globalThis.process.stderr.isTTY = true;
   new PrintableShellCommand("echo", ["hi"]).print();
-  expect(spyStderr.mock.lastCall).toEqual([
-    "\u001b[90m\u001b[1mecho \\\n  hi\u001b[22m\u001b[39m",
-  ]);
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(BOLD_GRAY_ECHO);
   new PrintableShellCommand("echo", ["hi"]).print({
     autoStyle: "tty",
   });
-  expect(spyStderr.mock.lastCall).toEqual([
-    "\u001b[90m\u001b[1mecho \\\n  hi\u001b[22m\u001b[39m",
-  ]);
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(BOLD_GRAY_ECHO);
   new PrintableShellCommand("echo", ["hi"]).print({
     autoStyle: "never",
   });
-  expect(spyStderr.mock.lastCall).toEqual(["echo \\\n  hi"]);
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
 });
 
 test("tty (stdout)", async () => {
@@ -318,35 +320,31 @@ test("tty (stdout)", async () => {
   globalThis.process.stdout.isTTY = false;
   new PrintableShellCommand("echo", ["hi"]).print({ stream: stdout });
   expect(spyStderr.mock.lastCall).toEqual(undefined);
-  expect(spyStdout.mock.lastCall).toEqual(["echo \\\n  hi"]);
+  expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
 
   globalThis.process.stdout.isTTY = false;
   new PrintableShellCommand("echo", ["hi"]).print({
     stream: stdout,
     autoStyle: "tty",
   });
-  expect(spyStdout.mock.lastCall).toEqual(["echo \\\n  hi"]);
+  expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
   new PrintableShellCommand("echo", ["hi"]).print({
     stream: stdout,
     autoStyle: "never",
   });
-  expect(spyStdout.mock.lastCall).toEqual(["echo \\\n  hi"]);
+  expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
 
   globalThis.process.stdout.isTTY = true;
   new PrintableShellCommand("echo", ["hi"]).print({ stream: stdout });
-  expect(spyStdout.mock.lastCall).toEqual([
-    "\u001b[90m\u001b[1mecho \\\n  hi\u001b[22m\u001b[39m",
-  ]);
+  expect(spyStdout.mock.calls.slice(-2)).toEqual(BOLD_GRAY_ECHO);
   new PrintableShellCommand("echo", ["hi"]).print({
     stream: stdout,
     autoStyle: "tty",
   });
-  expect(spyStdout.mock.lastCall).toEqual([
-    "\u001b[90m\u001b[1mecho \\\n  hi\u001b[22m\u001b[39m",
-  ]);
+  expect(spyStdout.mock.calls.slice(-2)).toEqual(BOLD_GRAY_ECHO);
   new PrintableShellCommand("echo", ["hi"]).print({
     stream: stdout,
     autoStyle: "never",
   });
-  expect(spyStdout.mock.lastCall).toEqual(["echo \\\n  hi"]);
+  expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
 });
