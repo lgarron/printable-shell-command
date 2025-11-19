@@ -666,7 +666,3 @@ export class PrintableShellCommand {
     shellOutBun: this.#shellOutBun.bind(this),
   };
 }
-
-new PrintableShellCommand("echo").print({
-  stream: stdout,
-});
