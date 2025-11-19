@@ -432,18 +432,20 @@ export class PrintableShellCommand {
    *
    * The `stdio` field is left overridable. To capture `stdout` and `stderr`, connect them to output files like this:
    *
-   *     import { open } from "node:fs/promises";
-   *     import { Path } from "path-class";
-   *     import { PrintableShellCommand } from "printable-shell-command";
+   * ```
+   * import { open } from "node:fs/promises";
+   * import { Path } from "path-class";
+   * import { PrintableShellCommand } from "printable-shell-command";
    *
-   *     const tempDir = await Path.makeTempDir();
-   *     console.log(`Temp dir: ${tempDir}`);
-   *     const stdout = await open(tempDir.join("stdout.log").path, "a");
-   *     const stderr = await open(tempDir.join("stderr.log").path, "a");
+   * const tempDir = await Path.makeTempDir();
+   * console.log(`Temp dir: ${tempDir}`);
+   * const stdout = await open(tempDir.join("stdout.log").path, "a");
+   * const stderr = await open(tempDir.join("stderr.log").path, "a");
    *
-   *     new PrintableShellCommand("echo", ["hi"]).spawnDetached({
-   *       stdio: ["ignore", stdout.fd, stderr.fd],
-   *     });
+   * new PrintableShellCommand("echo", ["hi"]).spawnDetached({
+   *   stdio: ["ignore", stdout.fd, stderr.fd],
+   * });
+   * ```
    *
    */
   public spawnDetached(
