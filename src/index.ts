@@ -24,6 +24,10 @@ const DEFAULT_ARGUMENT_LINE_WRAPPING = "by-entry";
 const INLINE_SEPARATOR = " ";
 const LINE_WRAP_LINE_END = " \\\n";
 
+type StyleTextFormat = Parameters<typeof styleText>[0];
+
+const TTY_AUTO_STYLE: StyleTextFormat = ["gray", "bold"];
+
 // biome-ignore lint/suspicious/noExplicitAny: This is the correct type nere.
 function isString(s: any): s is string {
   return typeof s === "string";
@@ -76,10 +80,22 @@ export interface PrintOptions {
    *
    * ```
    * new PrintableShellCommand("echo", ["hi"]).print({
-   *   styleTextFormat: ["gray", "bold"],
+   *   styleTextFormat: ["green", "underline"],
    * });
    * */
-  styleTextFormat?: Parameters<typeof styleText>[0];
+  styleTextFormat?: StyleTextFormat;
+}
+
+export interface AutoPrintOptions extends PrintOptions {
+  /**
+   * Auto-style the text when:
+   *
+   * - `stdout` is a TTY
+   * `styleTextFormat` is not specified.
+   *
+   * The current auto style is: `["gray", "bold"]`
+   */
+  autoStyle?: "tty" | "never";
 }
 
 // https://mywiki.wooledge.org/BashGuide/SpecialCharacters
@@ -348,8 +364,23 @@ export class PrintableShellCommand {
     return text;
   }
 
-  public print(options?: PrintOptions): PrintableShellCommand {
-    console.log(this.getPrintableCommand(options));
+  /**
+   * Print the shell command to `stdout`.
+   *
+   * By default, this will be auto-styled (as bold gray) when `stdout` is a TTY.
+   * Pass `"autoStyle": "never"` to disable this.
+   *
+   */
+  public print(options?: AutoPrintOptions): PrintableShellCommand {
+    // Note: we only need to modify top-level fields, so `structuredClone(…)`
+    // would be overkill and can only cause performance issues.
+    const optionsCopy = { ...options };
+    optionsCopy.styleTextFormat ??=
+      // TODO: is it safe to cache this?
+      options?.autoStyle !== "never" && globalThis.process?.stdout.isTTY
+        ? TTY_AUTO_STYLE
+        : undefined;
+    console.log(this.getPrintableCommand(optionsCopy));
     return this;
   }
 
