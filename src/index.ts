@@ -442,7 +442,7 @@ export class PrintableShellCommand {
    *     const stderr = await open(tempDir.join("stderr.log").path, "a");
    *
    *     new PrintableShellCommand("echo", ["hi"]).spawnDetached({
-   *     stdio: ["ignore", stdout.fd, stderr.fd],
+   *       stdio: ["ignore", stdout.fd, stderr.fd],
    *     });
    *
    */
