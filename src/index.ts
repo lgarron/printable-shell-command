@@ -7,7 +7,9 @@ import type {
   StdioPipe as NodeStdioPipe,
   ProcessEnvOptions,
 } from "node:child_process";
-import { Readable } from "node:stream";
+import { stderr, stdout } from "node:process";
+import { Readable, Writable } from "node:stream";
+import type { WriteStream } from "node:tty";
 import { styleText } from "node:util";
 import type {
   SpawnOptions as BunSpawnOptions,
@@ -86,16 +88,18 @@ export interface PrintOptions {
   styleTextFormat?: StyleTextFormat;
 }
 
-export interface AutoPrintOptions extends PrintOptions {
+export interface StreamPrintOptions extends PrintOptions {
   /**
    * Auto-style the text when:
    *
-   * - `stdout` is a TTY
-   * `styleTextFormat` is not specified.
+   * - the output stream is detected to be a TTY
+   * - `styleTextFormat` is not specified.
    *
    * The current auto style is: `["gray", "bold"]`
    */
   autoStyle?: "tty" | "never";
+  // This would be a `WritableStream` (open web standard), but `WriteStream` allows us to query `.isTTY`.
+  stream?: WriteStream | Writable;
 }
 
 // https://mywiki.wooledge.org/BashGuide/SpecialCharacters
@@ -365,22 +369,27 @@ export class PrintableShellCommand {
   }
 
   /**
-   * Print the shell command to `stdout`.
+   * Print the shell command to `stderr` (default) or a specified stream.
    *
-   * By default, this will be auto-styled (as bold gray) when `stdout` is a TTY.
-   * Pass `"autoStyle": "never"` to disable this.
+   * By default, this will be auto-styled (as bold gray) when `.isTTY` is true
+   * for the stream. `.isTTY` is populated for the `stdout` and `stderr` objects
+   * available from `node:process` (and `globalThis.process`). Pass
+   * `"autoStyle": "never"` or an explicit `styleTextFormat` to disable this.
    *
    */
-  public print(options?: AutoPrintOptions): PrintableShellCommand {
+  public print(options?: StreamPrintOptions): PrintableShellCommand {
+    const stream = options?.stream ?? stderr;
     // Note: we only need to modify top-level fields, so `structuredClone(…)`
     // would be overkill and can only cause performance issues.
     const optionsCopy = { ...options };
     optionsCopy.styleTextFormat ??=
-      // TODO: is it safe to cache this?
-      options?.autoStyle !== "never" && globalThis.process?.stdout.isTTY
+      options?.autoStyle !== "never" &&
+      (stream as { isTTY?: boolean }).isTTY === true
         ? TTY_AUTO_STYLE
         : undefined;
-    console.log(this.getPrintableCommand(optionsCopy));
+    const writable =
+      stream instanceof Writable ? stream : Writable.fromWeb(stream);
+    writable.write(this.getPrintableCommand(optionsCopy));
     return this;
   }
 
@@ -657,3 +666,7 @@ export class PrintableShellCommand {
     shellOutBun: this.#shellOutBun.bind(this),
   };
 }
+
+new PrintableShellCommand("echo").print({
+  stream: stdout,
+});
