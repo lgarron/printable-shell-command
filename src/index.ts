@@ -1,11 +1,7 @@
 import type {
+  ChildProcessByStdio,
   ChildProcess as NodeChildProcess,
   SpawnOptions as NodeSpawnOptions,
-  SpawnOptionsWithoutStdio as NodeSpawnOptionsWithoutStdio,
-  SpawnOptionsWithStdioTuple as NodeSpawnOptionsWithStdioTuple,
-  StdioNull as NodeStdioNull,
-  StdioPipe as NodeStdioPipe,
-  ProcessEnvOptions,
 } from "node:child_process";
 import { stderr } from "node:process";
 import { Readable, Writable } from "node:stream";
@@ -18,6 +14,7 @@ import type {
 } from "bun";
 import { Path, stringifyIfPath } from "path-class";
 import type { SetFieldType } from "type-fest";
+import type { NodeCwd, NodeWithCwd, spawnType, WithSuccess } from "./spawn";
 
 // TODO: does this import work?
 /**
@@ -135,13 +132,6 @@ const SPECIAL_SHELL_CHARACTERS = new Set([
 const SPECIAL_SHELL_CHARACTERS_FOR_MAIN_COMMAND =
   // biome-ignore lint/suspicious/noExplicitAny: Workaround to make this package easier to use in a project that otherwise only uses ES2022.)
   (SPECIAL_SHELL_CHARACTERS as unknown as any).union(new Set(["="]));
-
-type NodeCwd = ProcessEnvOptions["cwd"] | Path;
-type NodeWithCwd<T extends { cwd?: ProcessEnvOptions["cwd"] }> = SetFieldType<
-  T,
-  "cwd",
-  NodeCwd | undefined
->;
 
 // biome-ignore lint/suspicious/noExplicitAny: Just matching
 type BunCwd = SpawnOptions.OptionsObject<any, any, any>["cwd"] | Path;
@@ -402,23 +392,14 @@ export class PrintableShellCommand {
   /**
    * The returned child process includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
    */
-  public spawn<
-    Stdin extends NodeStdioNull | NodeStdioPipe,
-    Stdout extends NodeStdioNull | NodeStdioPipe,
-    Stderr extends NodeStdioNull | NodeStdioPipe,
-  >(
-    options?:
-      | NodeWithCwd<NodeSpawnOptions>
-      | NodeWithCwd<NodeSpawnOptionsWithoutStdio>
-      | NodeWithCwd<NodeSpawnOptionsWithStdioTuple<Stdin, Stdout, Stderr>>,
-  ): // TODO: figure out how to return `ChildProcessByStdio<…>` without duplicating fragile boilerplate.
-  NodeChildProcess & { success: Promise<void> } {
+  /** @ts-expect-error Type wrangling. */
+  public spawn: typeof spawnType = (options?: SpawnOptions & NodeCwd) => {
     const { spawn } = process.getBuiltinModule("node:child_process");
     const cwd = stringifyIfPath(options?.cwd);
     // biome-ignore lint/suspicious/noTsIgnore: We don't want linting to depend on *broken* type checking.
     // @ts-ignore: The TypeScript checker has trouble reconciling the optional (i.e. potentially `undefined`) `options` with the third argument.
     const subprocess = spawn(...this.forNode(), {
-      ...options,
+      ...(options as object),
       cwd,
     }) as NodeChildProcess & {
       success: Promise<void>;
@@ -441,7 +422,7 @@ export class PrintableShellCommand {
       enumerable: false,
     });
     return subprocess;
-  }
+  };
 
   /** A wrapper for `.spawn(…)` that sets stdio to `"inherit"` (common for
    * invoking commands from scripts whose output and interaction should be
@@ -453,17 +434,19 @@ export class PrintableShellCommand {
    */
   public spawnTransparently(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
-  ): NodeChildProcess & { success: Promise<void> } {
+  ): ChildProcessByStdio<null, null, null> & WithSuccess {
     if (options && "stdio" in options) {
       throw new Error("Unexpected `stdio` field.");
     }
-    return this.spawn({ ...options, stdio: "inherit" });
+
+    // biome-ignore lint/suspicious/noExplicitAny: Type wrangling.
+    return this.spawn({ ...options, stdio: "inherit" }) as any;
   }
 
   /** @deprecated: Use `.spawnTransparently(…)`. */
   public spawnInherit(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
-  ): NodeChildProcess & { success: Promise<void> } {
+  ): NodeChildProcess & WithSuccess {
     return this.spawnTransparently(options);
   }
 
