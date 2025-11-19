@@ -1,4 +1,5 @@
 import { expect, spyOn, test } from "bun:test";
+import { createWriteStream } from "node:fs";
 import { open } from "node:fs/promises";
 import { stderr, stdout } from "node:process";
 import { Path } from "path-class";
@@ -347,4 +348,16 @@ test("tty (stdout)", async () => {
     autoStyle: "never",
   });
   expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+});
+
+test("tty (fd 3)", async () => {
+  spyStdout.mockReset();
+  spyStderr.mockReset();
+  globalThis.process.stdout.isTTY = false;
+
+  const stream = createWriteStream("", { fd: 3 });
+
+  new PrintableShellCommand("echo", ["hi"]).print({ stream });
+  expect(spyStdout.mock.lastCall).toEqual(undefined);
+  expect(spyStderr.mock.lastCall).toEqual(undefined);
 });
