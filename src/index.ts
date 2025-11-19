@@ -7,7 +7,7 @@ import type {
   StdioPipe as NodeStdioPipe,
   ProcessEnvOptions,
 } from "node:child_process";
-import { stderr, stdout } from "node:process";
+import { stderr } from "node:process";
 import { Readable, Writable } from "node:stream";
 import type { WriteStream } from "node:tty";
 import { styleText } from "node:util";
@@ -18,6 +18,11 @@ import type {
 } from "bun";
 import { Path, stringifyIfPath } from "path-class";
 import type { SetFieldType } from "type-fest";
+
+// TODO: does this import work?
+/**
+ * @import { stdout } from "node:process"
+ */
 
 const DEFAULT_MAIN_INDENTATION = "";
 const DEFAULT_ARG_INDENTATION = "  ";
@@ -76,7 +81,7 @@ export interface PrintOptions {
   /** Include the first arg (or first arg group) on the same line as the command, regardless of the `argumentLineWrapping` setting. */
   skipLineWrapBeforeFirstArg?: true | false;
   /**
-   * Style text using `node`'s [`styleText(…)`](https://nodejs.org/api/util.html#utilstyletextformat-text-options)
+   * Style text using `node`'s {@link styleText | `styleText(…)`}.
    *
    * Example usage:
    *
@@ -198,7 +203,7 @@ export class PrintableShellCommand {
   }
 
   /**
-   * Convenient alias for `toFlatCommand()`.
+   * Convenient alias for {@link PrintableShellCommand.toFlatCommand | `.toFlatCommand()`}.
    *
    * Usage example:
    *
@@ -246,7 +251,7 @@ export class PrintableShellCommand {
    * const child_process = spawn(...command.forNode()); // Note the `...`
    * ```
    *
-   * Convenient alias for `toCommandWithFlatArgs()`.
+   * Convenient alias for {@link PrintableShellCommand.toCommandWithFlatArgs | `toCommandWithFlatArgs()`}.
    */
   public forNode(): [string, string[]] {
     return this.toCommandWithFlatArgs();
@@ -369,12 +374,12 @@ export class PrintableShellCommand {
   }
 
   /**
-   * Print the shell command to `stderr` (default) or a specified stream.
+   * Print the shell command to {@link stderr} (default) or a specified stream.
    *
    * By default, this will be auto-styled (as bold gray) when `.isTTY` is true
-   * for the stream. `.isTTY` is populated for the `stdout` and `stderr` objects
-   * available from `node:process` (and `globalThis.process`). Pass
-   * `"autoStyle": "never"` or an explicit `styleTextFormat` to disable this.
+   * for the stream. `.isTTY` is populated for the {@link stderr} and
+   * {@link stdout} objects. Pass `"autoStyle": "never"` or an explicit
+   * `styleTextFormat` to disable this.
    *
    */
   public print(options?: StreamPrintOptions): PrintableShellCommand {
@@ -461,7 +466,8 @@ export class PrintableShellCommand {
     return this.spawnTransparently(options);
   }
 
-  /** A wrapper for `.spawn(…)` that:
+  /**
+   * A wrapper for {@link PrintableShellCommand.spawn | `.spawn(…)`} that:
    *
    * - sets `detached` to `true`,
    * - sets stdio to `"inherit"`,
