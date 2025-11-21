@@ -503,8 +503,7 @@ export class PrintableShellCommand {
       stdio: ["ignore", "pipe", "inherit"],
     });
 
-    // biome-ignore lint/style/noNonNullAssertion: dude
-    return new Response(Readable.toWeb(subprocess.stdout!));
+    return new Response(Readable.toWeb(subprocess.stdout));
   }
 
   /**
