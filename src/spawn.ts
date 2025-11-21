@@ -23,7 +23,7 @@ export interface WithSuccess {
 
 export declare function spawnType(
   options?: NodeWithCwd<SpawnOptionsWithoutStdio>,
-): ChildProcessWithoutNullStreams;
+): ChildProcessWithoutNullStreams & WithSuccess;
 export declare function spawnType(
   options: NodeWithCwd<
     SpawnOptionsWithStdioTuple<StdioPipe, StdioPipe, StdioPipe>
