@@ -14,7 +14,7 @@ import type {
 } from "bun";
 import { Path, stringifyIfPath } from "path-class";
 import type { SetFieldType } from "type-fest";
-import type { NodeCwd, NodeWithCwd, spawnType, WithSuccess } from "./spawn";
+import type { NodeWithCwd, spawnType, WithSuccess } from "./spawn";
 
 // TODO: does this import work?
 /**
@@ -392,8 +392,11 @@ export class PrintableShellCommand {
   /**
    * The returned child process includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
    */
-  /** @ts-expect-error Type wrangling. */
-  public spawn: typeof spawnType = (options?: SpawnOptions & NodeCwd) => {
+  // biome-ignore lint/suspicious/noTsIgnore: `@ts-expect-error` would end up in the published package, where it is invalid.
+  // @ts-ignore-error Wrangling types.
+  public spawn: typeof spawnType = (
+    options?: Parameters<typeof spawnType>[0],
+  ) => {
     const { spawn } = process.getBuiltinModule("node:child_process");
     const cwd = stringifyIfPath(options?.cwd);
     // biome-ignore lint/suspicious/noTsIgnore: We don't want linting to depend on *broken* type checking.
