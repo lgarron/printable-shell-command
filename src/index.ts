@@ -392,9 +392,7 @@ export class PrintableShellCommand {
   /**
    * The returned child process includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
    */
-  // biome-ignore lint/suspicious/noTsIgnore: `@ts-expect-error` would end up in the published package, where it is invalid.
-  // @ts-ignore-error Wrangling types.
-  public spawn: typeof spawnType = (
+  public spawn: typeof spawnType = ((
     options?: Parameters<typeof spawnType>[0],
   ) => {
     const { spawn } = process.getBuiltinModule("node:child_process");
@@ -425,7 +423,8 @@ export class PrintableShellCommand {
       enumerable: false,
     });
     return subprocess;
-  };
+    // biome-ignore lint/suspicious/noExplicitAny: Type wrangling
+  }) as any;
 
   /** A wrapper for `.spawn(…)` that sets stdio to `"inherit"` (common for
    * invoking commands from scripts whose output and interaction should be
