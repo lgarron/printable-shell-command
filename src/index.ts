@@ -247,28 +247,6 @@ export class PrintableShellCommand {
     return this.toCommandWithFlatArgs();
   }
 
-  #escapeArg(
-    arg: string,
-    isMainCommand: boolean,
-    options: PrintOptions,
-  ): string {
-    const argCharacters = new Set(arg);
-    const specialShellCharacters = isMainCommand
-      ? SPECIAL_SHELL_CHARACTERS_FOR_MAIN_COMMAND
-      : SPECIAL_SHELL_CHARACTERS;
-    if (
-      options?.quoting === "extra-safe" ||
-      // biome-ignore lint/suspicious/noExplicitAny: Workaround to make this package easier to use in a project that otherwise only uses ES2022.)
-      (argCharacters as unknown as any).intersection(specialShellCharacters)
-        .size > 0
-    ) {
-      // Use single quote to reduce the need to escape (and therefore reduce the chance for bugs/security issues).
-      const escaped = arg.replaceAll("\\", "\\\\").replaceAll("'", "\\'");
-      return `'${escaped}'`;
-    }
-    return arg;
-  }
-
   #mainIndentation(options: PrintOptions): string {
     return options?.mainIndentation ?? DEFAULT_MAIN_INDENTATION;
   }
@@ -340,13 +318,11 @@ export class PrintableShellCommand {
       const argsEntry = stringifyIfPath(this.args[i]);
 
       if (isString(argsEntry)) {
-        serializedEntries.push(this.#escapeArg(argsEntry, false, options));
+        serializedEntries.push(escapeArg(argsEntry, false, options));
       } else {
         serializedEntries.push(
           argsEntry
-            .map((part) =>
-              this.#escapeArg(stringifyIfPath(part), false, options),
-            )
+            .map((part) => escapeArg(stringifyIfPath(part), false, options))
             .join(this.#argPairSeparator(options)),
         );
       }
@@ -354,7 +330,7 @@ export class PrintableShellCommand {
 
     let text =
       this.#mainIndentation(options) +
-      this.#escapeArg(this.commandName, true, options) +
+      escapeArg(this.commandName, true, options) +
       this.#separatorAfterCommand(options, serializedEntries.length) +
       serializedEntries.join(this.#intraEntrySeparator(options));
     if (options?.styleTextFormat) {
@@ -656,4 +632,26 @@ export class PrintableShellCommand {
     spawnBunStdout: this.#spawnBunStdout.bind(this),
     shellOutBun: this.#shellOutBun.bind(this),
   };
+}
+
+export function escapeArg(
+  arg: string,
+  isMainCommand: boolean,
+  options: PrintOptions,
+): string {
+  const argCharacters = new Set(arg);
+  const specialShellCharacters = isMainCommand
+    ? SPECIAL_SHELL_CHARACTERS_FOR_MAIN_COMMAND
+    : SPECIAL_SHELL_CHARACTERS;
+  if (
+    options?.quoting === "extra-safe" ||
+    // biome-ignore lint/suspicious/noExplicitAny: Workaround to make this package easier to use in a project that otherwise only uses ES2022.)
+    (argCharacters as unknown as any).intersection(specialShellCharacters)
+      .size > 0
+  ) {
+    // Use single quote to reduce the need to escape (and therefore reduce the chance for bugs/security issues).
+    const escaped = arg.replaceAll("\\", "\\\\").replaceAll("'", "\\'");
+    return `'${escaped}'`;
+  }
+  return arg;
 }
