@@ -7,6 +7,7 @@ import type {
 import { createReadStream } from "node:fs";
 import { stderr } from "node:process";
 import { Readable, Writable } from "node:stream";
+import { ReadableStream } from "node:stream/web";
 import type { WriteStream } from "node:tty";
 import { styleText } from "node:util";
 import type {
@@ -145,12 +146,13 @@ type BunWithCwd<
 // TODO: Is there an idiomatic ways to check that all potential fields of
 // `StdinSource` satisfy `(typeof STDIN_SOURCE_KEYS)[number]`, without adding
 // extra indirection for type wrangling?
-const STDIN_SOURCE_KEYS = ["text", "json", "path"] as const;
+const STDIN_SOURCE_KEYS = ["text", "json", "path", "stream"] as const;
 export type StdinSource =
   | { text: string }
   // biome-ignore lint/suspicious/noExplicitAny: `any` is the correct type for JSON data.
   | { json: any }
-  | { path: string | Path };
+  | { path: string | Path }
+  | { stream: Readable | ReadableStream };
 
 export class PrintableShellCommand {
   #commandName: string | Path;
@@ -451,6 +453,12 @@ export class PrintableShellCommand {
         stdin.end();
       } else if ("path" in this.#stdinSource) {
         createReadStream(stringifyIfPath(this.#stdinSource.path)).pipe(stdin);
+      } else if ("stream" in this.#stdinSource) {
+        const stream = (() => {
+          const { stream } = this.#stdinSource;
+          return stream instanceof Readable ? stream : Readable.fromWeb(stream);
+        })();
+        stream.pipe(stdin);
       } else {
         throw new Error("Invalid `.stdin(…)` source?");
       }
@@ -530,8 +538,13 @@ export class PrintableShellCommand {
       ...options,
       stdio: ["ignore", "pipe", "inherit"],
     });
-
-    return new Response(Readable.toWeb(subprocess.stdout));
+    const { stdout } = subprocess;
+    const stdoutPromise = (async function* () {
+      const arrayBuffer = await new Response(stdout).arrayBuffer();
+      await subprocess.success;
+      yield arrayBuffer;
+    })();
+    return new Response(Readable.from(stdoutPromise));
   }
 
   /**
