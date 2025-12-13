@@ -560,6 +560,43 @@ export class PrintableShellCommand {
     return this.stdout(options).json() as Promise<T>;
   }
 
+  async *#split0(text: string): AsyncGenerator<string> {
+    const parts = text.split("\x00");
+    assert(parts.at(-1) === "");
+    for (const part of parts.slice(0, -1)) {
+      yield part;
+    }
+  }
+
+  /**
+   * Parse `stdout` into a generator of string values using a NULL delimiter.
+   *
+   * A trailing NULL delimiter from `stdout` is required and removed.
+   */
+  public async *text0(
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
+  ): AsyncGenerator<string> {
+    // TODO: implement this using stream processing
+    const text = await this.stdout(options).text();
+    yield* this.#split0(text);
+  }
+
+  /**
+   * Parse `stdout` into a generator of JSON values using a NULL delimiter.
+   *
+   * A trailing NULL delimiter from `stdout` is required and removed.
+   */
+  public async *json0(
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
+  ): // biome-ignore lint/suspicious/noExplicitAny: `any` is the correct type for JSON
+  AsyncGenerator<any> {
+    // TODO: implement this using stream processing
+    const text = await this.stdout(options).text();
+    for await (const part of this.#split0(text)) {
+      yield JSON.parse(part);
+    }
+  }
+
   /** Equivalent to:
    *
    * ```
