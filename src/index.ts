@@ -7,7 +7,6 @@ import type {
 import { createReadStream } from "node:fs";
 import { stderr } from "node:process";
 import { Readable, Writable } from "node:stream";
-import { ReadableStream } from "node:stream/web";
 import type { WriteStream } from "node:tty";
 import { styleText } from "node:util";
 import type {
@@ -390,7 +389,6 @@ export class PrintableShellCommand {
    */
   stdin(source: StdinSource): PrintableShellCommand {
     const [key, ...moreKeys] = Object.keys(source);
-    console.log({ moreKeys });
     assert.equal(moreKeys.length, 0);
     // TODO: validate values?
     assert((STDIN_SOURCE_KEYS as unknown as string[]).includes(key));
@@ -528,9 +526,9 @@ export class PrintableShellCommand {
     childProcess.unref();
   }
 
-  public stdout(
+  #stdoutGenerator(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
-  ): Response {
+  ): AsyncGenerator<string> {
     if (options && "stdio" in options) {
       throw new Error("Unexpected `stdio` field.");
     }
@@ -539,12 +537,36 @@ export class PrintableShellCommand {
       stdio: ["ignore", "pipe", "inherit"],
     });
     const { stdout } = subprocess;
-    const stdoutPromise = (async function* () {
-      const arrayBuffer = await new Response(stdout).arrayBuffer();
+    // TODO: we'd make this a `ReadableStream`, but `ReadableStream.from(…)` is
+    // not implemented in `bun`: https://github.com/oven-sh/bun/issues/3700
+    return (async function* () {
+      for await (const chunk of stdout) {
+        yield chunk;
+      }
       await subprocess.success;
-      yield arrayBuffer;
     })();
-    return new Response(Readable.from(stdoutPromise));
+  }
+
+  public stdout(
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
+  ): Response {
+    // TODO: Use `ReadableStream.from(…)` once `bun` implements it: https://github.com/oven-sh/bun/pull/21269
+    return new Response(Readable.from(this.#stdoutGenerator(options)));
+  }
+
+  async *#split0(generator: AsyncGenerator<string>): AsyncGenerator<string> {
+    let pending = "";
+    for await (const chunk of generator) {
+      pending += chunk;
+      const newChunks = pending.split("\x00");
+      pending = newChunks.splice(-1)[0];
+      yield* newChunks;
+    }
+    if (pending !== "") {
+      throw new Error(
+        "Missing a trailing NUL character at the end of a NUL-delimited stream.",
+      );
+    }
   }
 
   /**
@@ -573,14 +595,6 @@ export class PrintableShellCommand {
     return this.stdout(options).json() as Promise<T>;
   }
 
-  async *#split0(text: string): AsyncGenerator<string> {
-    const parts = text.split("\x00");
-    assert(parts.at(-1) === "");
-    for (const part of parts.slice(0, -1)) {
-      yield part;
-    }
-  }
-
   /**
    * Parse `stdout` into a generator of string values using a NULL delimiter.
    *
@@ -589,9 +603,7 @@ export class PrintableShellCommand {
   public async *text0(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
   ): AsyncGenerator<string> {
-    // TODO: implement this using stream processing
-    const text = await this.stdout(options).text();
-    yield* this.#split0(text);
+    yield* this.#split0(this.#stdoutGenerator(options));
   }
 
   /**
@@ -603,9 +615,7 @@ export class PrintableShellCommand {
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
   ): // biome-ignore lint/suspicious/noExplicitAny: `any` is the correct type for JSON
   AsyncGenerator<any> {
-    // TODO: implement this using stream processing
-    const text = await this.stdout(options).text();
-    for await (const part of this.#split0(text)) {
+    for await (const part of this.#split0(this.#stdoutGenerator(options))) {
       yield JSON.parse(part);
     }
   }
