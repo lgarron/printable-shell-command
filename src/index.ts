@@ -4,6 +4,7 @@ import type {
   ChildProcess as NodeChildProcess,
   SpawnOptions as NodeSpawnOptions,
 } from "node:child_process";
+import { createReadStream } from "node:fs";
 import { stderr } from "node:process";
 import { Readable, Writable } from "node:stream";
 import type { WriteStream } from "node:tty";
@@ -141,8 +142,16 @@ type BunWithCwd<
   T extends { cwd?: SpawnOptions.OptionsObject<any, any, any>["cwd"] | Path },
 > = SetFieldType<T, "cwd", BunCwd | undefined>;
 
-// biome-ignore lint/suspicious/noExplicitAny: `any` is the correct type for JSON data.
-export type StdinSource = { text: string } | { json: any };
+// TODO: Is there an idiomatic ways to check that all potential fields of
+// `StdinSource` satisfy `(typeof STDIN_SOURCE_KEYS)[number]`, without adding
+// extra indirection for type wrangling?
+const STDIN_SOURCE_KEYS = ["text", "json", "path"] as const;
+export type StdinSource =
+  | { text: string }
+  // biome-ignore lint/suspicious/noExplicitAny: `any` is the correct type for JSON data.
+  | { json: any }
+  | { path: string | Path };
+
 export class PrintableShellCommand {
   #commandName: string | Path;
   constructor(
@@ -382,7 +391,7 @@ export class PrintableShellCommand {
     console.log({ moreKeys });
     assert.equal(moreKeys.length, 0);
     // TODO: validate values?
-    assert(["string", "json"].includes(key));
+    assert((STDIN_SOURCE_KEYS as unknown as string[]).includes(key));
 
     this.#stdinSource = source;
     return this;
@@ -432,13 +441,19 @@ export class PrintableShellCommand {
       enumerable: false,
     });
     if (this.#stdinSource) {
-      assert(subprocess.stdin);
-      if ("string" in this.#stdinSource) {
-        subprocess.stdin.write(this.#stdinSource.text);
+      const { stdin } = subprocess;
+      assert(stdin);
+      if ("text" in this.#stdinSource) {
+        stdin.write(this.#stdinSource.text);
+        stdin.end();
       } else if ("json" in this.#stdinSource) {
-        subprocess.stdin.write(JSON.stringify(this.#stdinSource.json));
+        stdin.write(JSON.stringify(this.#stdinSource.json));
+        stdin.end();
+      } else if ("path" in this.#stdinSource) {
+        createReadStream(stringifyIfPath(this.#stdinSource.path)).pipe(stdin);
+      } else {
+        throw new Error("Invalid `.stdin(…)` source?");
       }
-      subprocess.stdin.end();
     }
     return subprocess;
     // biome-ignore lint/suspicious/noExplicitAny: Type wrangling
