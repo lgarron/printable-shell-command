@@ -1,6 +1,5 @@
 import { expect, spyOn, test } from "bun:test";
 import { createWriteStream } from "node:fs";
-import { open } from "node:fs/promises";
 import { stderr, stdout } from "node:process";
 import { Path } from "path-class";
 import { PrintableShellCommand } from "../src";
@@ -214,19 +213,27 @@ test("don't line wrap after command (when there are no args)", () => {
 });
 
 test("spawnDetached", async () => {
-  const tempDir = await Path.makeTempDir();
-  console.log(`Temp dir: ${tempDir}`);
-  const stdout = await open(tempDir.join("stdout.log").path, "a");
-  const stderr = await open(tempDir.join("stderr.log").path, "a");
+  const tempPath = (await Path.makeTempDir()).join("file.txt");
 
-  new PrintableShellCommand("echo", ["hi"]).spawnDetached({
-    stdio: ["ignore", stdout.fd, stderr.fd],
-  });
+  new PrintableShellCommand("touch", [tempPath]).spawnDetached();
+  expect(await tempPath.exists()).toBe(false);
 
   // Wait a short while for the command to finish.
   await new Promise((resolve) => setTimeout(resolve, 100));
+  expect(await tempPath.existsAsFile()).toBe(true);
 
-  expect(await tempDir.join("stdout.log").readText()).toBe("hi\n");
+  expect(() =>
+    new PrintableShellCommand("touch", [tempPath]).spawnDetached({
+      stdio: "pipe",
+      // biome-ignore lint/suspicious/noExplicitAny: We're purposely passing an invalid value.
+    } as any),
+  ).toThrow("Unexpected `stdio` field.");
+  expect(() =>
+    new PrintableShellCommand("touch", [tempPath]).spawnDetached({
+      detached: false,
+      // biome-ignore lint/suspicious/noExplicitAny: We're purposely passing an invalid value.
+    } as any),
+  ).toThrow("Unexpected `detached` field.");
 });
 
 test(".stdin(…) (text)", async () => {

@@ -494,29 +494,16 @@ export class PrintableShellCommand {
    *
    * This is similar to starting a command in the background and disowning it (in a shell).
    *
-   * The `stdio` field is left overridable. To capture `stdout` and `stderr`, connect them to output files like this:
-   *
-   * ```
-   * import { open } from "node:fs/promises";
-   * import { Path } from "path-class";
-   * import { PrintableShellCommand } from "printable-shell-command";
-   *
-   * const tempDir = await Path.makeTempDir();
-   * console.log(`Temp dir: ${tempDir}`);
-   * const stdout = await open(tempDir.join("stdout.log").path, "a");
-   * const stderr = await open(tempDir.join("stderr.log").path, "a");
-   *
-   * new PrintableShellCommand("echo", ["hi"]).spawnDetached({
-   *   stdio: ["ignore", stdout.fd, stderr.fd],
-   * });
-   * ```
-   *
    */
   public spawnDetached(
-    options?: NodeWithCwd<Omit<NodeSpawnOptions, "detached">>,
+    options?: NodeWithCwd<Omit<Omit<NodeSpawnOptions, "stdio">, "detached">>,
   ): void {
-    if (options && "detached" in options) {
-      throw new Error("Unexpected `detached` field.");
+    if (options) {
+      for (const field of ["stdio", "detached"]) {
+        if (field in options) {
+          throw new Error(`Unexpected \`${field}\` field.`);
+        }
+      }
     }
     const childProcess = this.spawn({
       stdio: "ignore",
