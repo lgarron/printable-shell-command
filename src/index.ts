@@ -471,7 +471,7 @@ export class PrintableShellCommand {
    * - calls `.unref()`, and
    * - does not wait for the process to exit.
    *
-   * This is similar to starting a command int he background and disowning it (in a shell).
+   * This is similar to starting a command in the background and disowning it (in a shell).
    *
    * The `stdio` field is left overridable. To capture `stdout` and `stderr`, connect them to output files like this:
    *
