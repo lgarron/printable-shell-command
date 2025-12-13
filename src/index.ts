@@ -463,13 +463,6 @@ export class PrintableShellCommand {
     return this.spawn({ ...options, stdio: "inherit" }) as any;
   }
 
-  /** @deprecated: Use `.spawnTransparently(…)`. */
-  public spawnInherit(
-    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
-  ): NodeChildProcess & WithSuccess {
-    return this.spawnTransparently(options);
-  }
-
   /**
    * A wrapper for {@link PrintableShellCommand.spawn | `.spawn(…)`} that:
    *
