@@ -1,3 +1,4 @@
+import assert from "node:assert";
 import type {
   ChildProcessByStdio,
   ChildProcess as NodeChildProcess,
@@ -140,6 +141,8 @@ type BunWithCwd<
   T extends { cwd?: SpawnOptions.OptionsObject<any, any, any>["cwd"] | Path },
 > = SetFieldType<T, "cwd", BunCwd | undefined>;
 
+// biome-ignore lint/suspicious/noExplicitAny: `any` is the correct type for JSON data.
+export type StdinSource = { text: string } | { json: any };
 export class PrintableShellCommand {
   #commandName: string | Path;
   constructor(
@@ -365,6 +368,26 @@ export class PrintableShellCommand {
     return this;
   }
 
+  #stdinSource: StdinSource | undefined;
+  /**
+   * Send data to `stdin` of the subprocess.
+   *
+   * Note that this will overwrite:
+   *
+   * - Any previous value set using {@link PrintableShellCommand.stdin | `.stdin(…)`}.
+   * - Any value set for `stdin` using the `"stdio"` field of {@link PrintableShellCommand.spawn | `.spawn(…)`}.
+   */
+  stdin(source: StdinSource): PrintableShellCommand {
+    const [key, ...moreKeys] = Object.keys(source);
+    console.log({ moreKeys });
+    assert.equal(moreKeys.length, 0);
+    // TODO: validate values?
+    assert(["string", "json"].includes(key));
+
+    this.#stdinSource = source;
+    return this;
+  }
+
   /**
    * The returned child process includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
    */
@@ -373,6 +396,16 @@ export class PrintableShellCommand {
   ) => {
     const { spawn } = process.getBuiltinModule("node:child_process");
     const cwd = stringifyIfPath(options?.cwd);
+    if (this.#stdinSource) {
+      options ??= {};
+      if (typeof options.stdio === "undefined") {
+        options.stdio = "pipe";
+      }
+      if (typeof options.stdio === "string") {
+        options.stdio = new Array(3).fill(options.stdio);
+      }
+      options.stdio[0] = "pipe";
+    }
     // biome-ignore lint/suspicious/noTsIgnore: We don't want linting to depend on *broken* type checking.
     // @ts-ignore: The TypeScript checker has trouble reconciling the optional (i.e. potentially `undefined`) `options` with the third argument.
     const subprocess = spawn(...this.forNode(), {
@@ -398,6 +431,15 @@ export class PrintableShellCommand {
       },
       enumerable: false,
     });
+    if (this.#stdinSource) {
+      assert(subprocess.stdin);
+      if ("string" in this.#stdinSource) {
+        subprocess.stdin.write(this.#stdinSource.text);
+      } else if ("json" in this.#stdinSource) {
+        subprocess.stdin.write(JSON.stringify(this.#stdinSource.json));
+      }
+      subprocess.stdin.end();
+    }
     return subprocess;
     // biome-ignore lint/suspicious/noExplicitAny: Type wrangling
   }) as any;
