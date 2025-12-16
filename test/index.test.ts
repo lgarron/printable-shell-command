@@ -267,8 +267,8 @@ test(".stdin(…) (Path)", async () => {
 
 test(".stdin(…) (web stream)", async () => {
   const tempDir = await Path.makeTempDir();
-  tempDir.join("a.txt").write("");
-  tempDir.join("b.txt").write("");
+  await tempDir.join("a.txt").write("");
+  await tempDir.join("b.txt").write("");
 
   const paths = await Array.fromAsync(
     new PrintableShellCommand("find", [
