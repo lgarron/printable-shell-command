@@ -16,7 +16,13 @@ import type {
 } from "bun";
 import { Path, stringifyIfPath } from "path-class";
 import type { SetFieldType } from "type-fest";
-import type { NodeWithCwd, spawnType, WithSuccess } from "./spawn";
+import type {
+  NodeWithCwd,
+  spawnType,
+  WithStderrResponse,
+  WithStdoutResponse,
+  WithSuccess,
+} from "./spawn";
 
 // TODO: does this import work?
 /**
@@ -423,6 +429,7 @@ export class PrintableShellCommand {
     }) as NodeChildProcess & {
       success: Promise<void>;
     };
+    // TODO: define properties on prototypes instead.
     Object.defineProperty(subprocess, "success", {
       get() {
         return new Promise<void>((resolve, reject) =>
@@ -440,6 +447,34 @@ export class PrintableShellCommand {
       },
       enumerable: false,
     });
+    if (subprocess.stdout) {
+      // TODO: dedupe
+      const s = subprocess as unknown as Readable &
+        WithStdoutResponse &
+        WithSuccess;
+      s.stdout.response = () =>
+        new Response(Readable.from(this.#generator(s.stdout, s.success)));
+      s.stdout.text = () => s.stdout.response().text();
+      const thisCached = this; // TODO: make this type-check using `.bind(…)`
+      s.stdout.text0 = async function* () {
+        yield* thisCached.#split0(thisCached.#generator(s.stdout, s.success));
+      };
+      s.stdout.json = <T>() => s.stdout.response().json() as Promise<T>;
+    }
+    if (subprocess.stderr) {
+      // TODO: dedupe
+      const s = subprocess as unknown as Readable &
+        WithStderrResponse &
+        WithSuccess;
+      s.stderr.response = () =>
+        new Response(Readable.from(this.#generator(s.stderr, s.success)));
+      s.stderr.text = () => s.stderr.response().text();
+      const thisCached = this; // TODO: make this type-check using `.bind(…)`
+      s.stderr.text0 = async function* () {
+        yield* thisCached.#split0(thisCached.#generator(s.stderr, s.success));
+      };
+      s.stderr.json = <T>() => s.stderr.response().json() as Promise<T>;
+    }
     if (this.#stdinSource) {
       const { stdin } = subprocess;
       assert(stdin);
@@ -513,7 +548,21 @@ export class PrintableShellCommand {
     childProcess.unref();
   }
 
-  #stdoutGenerator(
+  #generator(
+    readable: Readable,
+    successPromise: Promise<void>,
+  ): AsyncGenerator<string> {
+    // TODO: we'd make this a `ReadableStream`, but `ReadableStream.from(…)` is
+    // not implemented in `bun`: https://github.com/oven-sh/bun/issues/3700
+    return (async function* () {
+      for await (const chunk of readable) {
+        yield chunk;
+      }
+      await successPromise;
+    })();
+  }
+
+  #stdoutSpawnGenerator(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
   ): AsyncGenerator<string> {
     if (options && "stdio" in options) {
@@ -523,22 +572,14 @@ export class PrintableShellCommand {
       ...options,
       stdio: ["ignore", "pipe", "inherit"],
     });
-    const { stdout } = subprocess;
-    // TODO: we'd make this a `ReadableStream`, but `ReadableStream.from(…)` is
-    // not implemented in `bun`: https://github.com/oven-sh/bun/issues/3700
-    return (async function* () {
-      for await (const chunk of stdout) {
-        yield chunk;
-      }
-      await subprocess.success;
-    })();
+    return this.#generator(subprocess.stdout, subprocess.success);
   }
 
   public stdout(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
   ): Response {
     // TODO: Use `ReadableStream.from(…)` once `bun` implements it: https://github.com/oven-sh/bun/pull/21269
-    return new Response(Readable.from(this.#stdoutGenerator(options)));
+    return new Response(Readable.from(this.#stdoutSpawnGenerator(options)));
   }
 
   async *#split0(generator: AsyncGenerator<string>): AsyncGenerator<string> {
@@ -590,7 +631,7 @@ export class PrintableShellCommand {
   public async *text0(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
   ): AsyncGenerator<string> {
-    yield* this.#split0(this.#stdoutGenerator(options));
+    yield* this.#split0(this.#stdoutSpawnGenerator(options));
   }
 
   /**
@@ -602,7 +643,9 @@ export class PrintableShellCommand {
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
   ): // biome-ignore lint/suspicious/noExplicitAny: `any` is the correct type for JSON
   AsyncGenerator<any> {
-    for await (const part of this.#split0(this.#stdoutGenerator(options))) {
+    for await (const part of this.#split0(
+      this.#stdoutSpawnGenerator(options),
+    )) {
       yield JSON.parse(part);
     }
   }

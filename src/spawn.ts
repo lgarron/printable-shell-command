@@ -21,6 +21,20 @@ export interface WithSuccess {
   success: Promise<void>;
 }
 
+export interface WithResponse {
+  response: () => Response;
+  text: () => Promise<string>;
+  text0: () => AsyncGenerator<string>;
+  json: <T>() => Promise<T>;
+}
+export interface WithStdoutResponse {
+  stdout: Readable & WithResponse;
+}
+
+export interface WithStderrResponse {
+  stderr: Readable & WithResponse;
+}
+
 export declare function spawnType(
   options?: NodeWithCwd<SpawnOptionsWithoutStdio>,
 ): ChildProcessWithoutNullStreams & WithSuccess;
@@ -28,22 +42,32 @@ export declare function spawnType(
   options: NodeWithCwd<
     SpawnOptionsWithStdioTuple<StdioPipe, StdioPipe, StdioPipe>
   >,
-): ChildProcessByStdio<Writable, Readable, Readable> & WithSuccess;
+): ChildProcessByStdio<Writable, Readable, Readable> &
+  WithSuccess &
+  WithStdoutResponse &
+  WithStderrResponse;
 export declare function spawnType(
   options: NodeWithCwd<
     SpawnOptionsWithStdioTuple<StdioPipe, StdioPipe, StdioNull>
   >,
-): ChildProcessByStdio<Writable, Readable, null> & WithSuccess;
+): ChildProcessByStdio<Writable, Readable, null> &
+  WithSuccess &
+  WithStdoutResponse;
 export declare function spawnType(
   options: NodeWithCwd<
     SpawnOptionsWithStdioTuple<StdioPipe, StdioNull, StdioPipe>
   >,
-): ChildProcessByStdio<Writable, null, Readable> & WithSuccess;
+): ChildProcessByStdio<Writable, null, Readable> &
+  WithSuccess &
+  WithStderrResponse;
 export declare function spawnType(
   options: NodeWithCwd<
     SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioPipe>
   >,
-): ChildProcessByStdio<null, Readable, Readable> & WithSuccess;
+): ChildProcessByStdio<null, Readable, Readable> &
+  WithSuccess &
+  WithStdoutResponse &
+  WithStderrResponse;
 export declare function spawnType(
   options: NodeWithCwd<
     SpawnOptionsWithStdioTuple<StdioPipe, StdioNull, StdioNull>
@@ -53,12 +77,12 @@ export declare function spawnType(
   options: NodeWithCwd<
     SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioNull>
   >,
-): ChildProcessByStdio<null, Readable, null> & WithSuccess;
+): ChildProcessByStdio<null, Readable, null> & WithSuccess & WithStdoutResponse;
 export declare function spawnType(
   options: NodeWithCwd<
     SpawnOptionsWithStdioTuple<StdioNull, StdioNull, StdioPipe>
   >,
-): ChildProcessByStdio<null, null, Readable> & WithSuccess;
+): ChildProcessByStdio<null, null, Readable> & WithSuccess & WithStderrResponse;
 export declare function spawnType(
   options: NodeWithCwd<
     SpawnOptionsWithStdioTuple<StdioNull, StdioNull, StdioNull>
