@@ -2,6 +2,9 @@
 build: setup
 	bun run script/build.ts
 
+.PHONY: check
+check: lint test build check-package.json
+
 .PHONY: test
 test: test-js lint
 
@@ -15,6 +18,10 @@ lint-biome: setup
 .PHONY: lint-tsc
 lint-tsc: setup
 	bun x tsc --noEmit --project .
+
+.PHONY: check-package.json
+check-package.json: build
+	bun x --package @cubing/dev-config package.json check
 
 .PHONY: format
 format: setup
@@ -46,5 +53,5 @@ reset: clean
 	rm -rf ./node_modules/
 
 .PHONY: prepublishOnly
-prepublishOnly: lint test clean build
+prepublishOnly: clean check build
 

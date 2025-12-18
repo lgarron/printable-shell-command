@@ -1,34 +1,45 @@
 {
-	"name": "printable-shell-command",
-	"version": "3.0.3-dev",
-	"devDependencies": {
-		"@biomejs/biome": "^2.1.4",
-		"@cubing/dev-config": "^0.3.6",
-		"@types/bun": "^1.2.20",
-		"@types/node": "^24.2.0",
-		"esbuild": "^0.25.5",
-		"typescript": "^5.9.3"
-	},
-	"peerDependencies": {
-		"@types/bun": "^1.2.20",
-		"@types/node": "^24.2.0"
-	},
-	"exports": {
-		".": {
-			"types": "./dist/lib/printable-shell-command/index.d.ts",
-			"import": "./dist/lib/printable-shell-command/index.js"
-		}
-	},
-	"files": [
-		"./dist/",
-		"./src/"
-	],
-	"type": "module",
-	"scripts": {
-		"prepublishOnly": "make prepublishOnly"
-	},
-	"dependencies": {
-		"path-class": ">=0.10.3",
-		"type-fest": ">=5.1.0"
-	}
+  "name": "printable-shell-command",
+  "version": "3.0.3-dev",
+  "description": "A helper class to construct shell commands in a way that allows printing them.",
+  "author": {
+    "name": "Lucas Garron",
+    "email": "code@garron.net",
+    "url": "https://garron.net/"
+  },
+  "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lgarron/printable-shell-command.git"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/lib/printable-shell-command/index.d.ts",
+      "import": "./dist/lib/printable-shell-command/index.js"
+    }
+  },
+  "dependencies": {
+    "path-class": ">=0.10.3",
+    "type-fest": ">=5.1.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.1.4",
+    "@cubing/dev-config": "^0.6.5",
+    "@types/bun": "^1.2.20",
+    "@types/node": "^24.2.0",
+    "esbuild": "^0.25.5",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "@types/bun": "^1.2.20",
+    "@types/node": "^24.2.0"
+  },
+  "files": [
+    "./dist/",
+    "./src/"
+  ],
+  "scripts": {
+    "prepublishOnly": "make prepublishOnly"
+  }
 }
