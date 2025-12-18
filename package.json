@@ -9,7 +9,7 @@
 		"esbuild": "^0.25.5",
 		"typescript": "^5.9.3"
 	},
-	"optionalDependencies": {
+	"peerDependencies": {
 		"@types/bun": "^1.2.20",
 		"@types/node": "^24.2.0"
 	},
