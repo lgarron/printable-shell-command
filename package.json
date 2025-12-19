@@ -33,7 +33,7 @@
   },
   "peerDependencies": {
     "@types/bun": "^1.2.20",
-    "@types/node": "^24.2.0"
+    "@types/node": ">=24.2.0"
   },
   "files": [
     "./dist/",
