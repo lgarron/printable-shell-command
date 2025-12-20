@@ -1,6 +1,6 @@
 {
   "name": "printable-shell-command",
-  "version": "4.0.1-dev",
+  "version": "4.0.1",
   "description": "A helper class to construct shell commands in a way that allows printing them.",
   "author": {
     "name": "Lucas Garron",
