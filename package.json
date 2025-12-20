@@ -33,6 +33,11 @@
   "peerDependencies": {
     "@types/node": ">=24.2.0"
   },
+  "peerDependenciesMeta": {
+    "@types/node": {
+      "optional": true
+    }
+  },
   "files": [
     "./dist/",
     "./src/"
