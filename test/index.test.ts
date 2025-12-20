@@ -203,8 +203,8 @@ test("don't line wrap after command (when there are no args)", () => {
 test("spawnDetached", async () => {
   const tempPath = (await Path.makeTempDir()).join("file.txt");
 
-  new PrintableShellCommand("touch", [tempPath]).spawnDetached();
   expect(await tempPath.exists()).toBe(false);
+  new PrintableShellCommand("touch", [tempPath]).spawnDetached();
 
   // Wait a short while for the command to finish.
   await new Promise((resolve) => setTimeout(resolve, 100));
