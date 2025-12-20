@@ -20,19 +20,17 @@
     }
   },
   "dependencies": {
-    "path-class": ">=0.10.3",
-    "type-fest": ">=5.1.0"
+    "path-class": ">=0.10.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.1.4",
-    "@cubing/dev-config": "^0.6.5",
-    "@types/bun": "^1.2.20",
-    "@types/node": "^24.2.0",
+    "@cubing/dev-config": ">=0.7.2",
+    "@types/node": ">=24.2.0",
     "esbuild": "^0.25.5",
+    "printable-shell-command": "^3.0.3",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "@types/bun": "^1.2.20",
     "@types/node": ">=24.2.0"
   },
   "files": [

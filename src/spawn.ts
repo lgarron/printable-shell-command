@@ -11,11 +11,12 @@ import type {
 } from "node:child_process";
 import type { Readable, Writable } from "node:stream";
 import type { Path } from "path-class";
-import type { SetFieldType } from "type-fest";
 
 export type NodeCwd = ProcessEnvOptions["cwd"] | Path;
-export type NodeWithCwd<T extends { cwd?: ProcessEnvOptions["cwd"] }> =
-  SetFieldType<T, "cwd", NodeCwd | undefined>;
+export type NodeWithCwd<T extends { cwd?: ProcessEnvOptions["cwd"] }> = Omit<
+  T,
+  "cwd"
+> & { cwd?: NodeCwd };
 
 export interface WithSuccess {
   success: Promise<void>;

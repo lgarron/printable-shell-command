@@ -27,18 +27,6 @@ test("args for commands", () => {
       "experiments.cubing.net:~/experiments.cubing.net/test/deploy/",
     ],
   ]);
-  expect(rsyncCommand.toFlatCommand()).toEqual([
-    "rsync",
-    "-avz",
-    "--exclude",
-    ".DS_Store",
-    "--exclude",
-    ".git",
-    "./dist/web/experiments.cubing.net/test/deploy/",
-    "experiments.cubing.net:~/experiments.cubing.net/test/deploy/",
-  ]);
-  expect(rsyncCommand.toCommandWithFlatArgs()).toEqual(rsyncCommand.forNode());
-  expect(rsyncCommand.toFlatCommand()).toEqual(rsyncCommand.forBun());
 });
 
 test("default formatting", () => {

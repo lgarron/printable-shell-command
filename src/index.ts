@@ -9,13 +9,7 @@ import { stderr } from "node:process";
 import { Readable, Writable } from "node:stream";
 import type { WriteStream } from "node:tty";
 import { styleText } from "node:util";
-import type {
-  SpawnOptions as BunSpawnOptions,
-  Subprocess as BunSubprocess,
-  SpawnOptions,
-} from "bun";
 import { Path, stringifyIfPath } from "path-class";
-import type { SetFieldType } from "type-fest";
 import type {
   NodeWithCwd,
   spawnType,
@@ -141,13 +135,6 @@ const SPECIAL_SHELL_CHARACTERS_FOR_MAIN_COMMAND =
   // biome-ignore lint/suspicious/noExplicitAny: Workaround to make this package easier to use in a project that otherwise only uses ES2022.)
   (SPECIAL_SHELL_CHARACTERS as unknown as any).union(new Set(["="]));
 
-// biome-ignore lint/suspicious/noExplicitAny: Just matching
-type BunCwd = SpawnOptions.OptionsObject<any, any, any>["cwd"] | Path;
-type BunWithCwd<
-  // biome-ignore lint/suspicious/noExplicitAny: Just matching
-  T extends { cwd?: SpawnOptions.OptionsObject<any, any, any>["cwd"] | Path },
-> = SetFieldType<T, "cwd", BunCwd | undefined>;
-
 // TODO: Is there an idiomatic ways to check that all potential fields of
 // `StdinSource` satisfy `(typeof STDIN_SOURCE_KEYS)[number]`, without adding
 // extra indirection for type wrangling?
@@ -195,40 +182,6 @@ export class PrintableShellCommand {
     return stringifyIfPath(this.#commandName);
   }
 
-  /** For use with `bun`.
-   *
-   * Usage example:
-   *
-   * ```
-   * import { PrintableShellCommand } from "printable-shell-command";
-   * import { spawn } from "bun";
-   *
-   * const command = new PrintableShellCommand( … );
-   * await spawn(command.toFlatCommand()).exited;
-   * ```
-   */
-  public toFlatCommand(): string[] {
-    return [this.commandName, ...this.args.flat().map(stringifyIfPath)];
-  }
-
-  /**
-   * Convenient alias for {@link PrintableShellCommand.toFlatCommand | `.toFlatCommand()`}.
-   *
-   * Usage example:
-   *
-   * ```
-   * import { PrintableShellCommand } from "printable-shell-command";
-   * import { spawn } from "bun";
-   *
-   * const command = new PrintableShellCommand( … );
-   * await spawn(command.forBun()).exited;
-   * ```
-   *
-   * */
-  public forBun(): string[] {
-    return this.toFlatCommand();
-  }
-
   /**
    * For use with `node:child_process`
    *
@@ -245,25 +198,6 @@ export class PrintableShellCommand {
    */
   public toCommandWithFlatArgs(): [string, string[]] {
     return [this.commandName, this.args.flat().map(stringifyIfPath)];
-  }
-
-  /**
-   * For use with `node:child_process`
-   *
-   * Usage example:
-   *
-   * ```
-   * import { PrintableShellCommand } from "printable-shell-command";
-   * import { spawn } from "node:child_process";
-   *
-   * const command = new PrintableShellCommand( … );
-   * const child_process = spawn(...command.forNode()); // Note the `...`
-   * ```
-   *
-   * Convenient alias for {@link PrintableShellCommand.toCommandWithFlatArgs | `toCommandWithFlatArgs()`}.
-   */
-  public forNode(): [string, string[]] {
-    return this.toCommandWithFlatArgs();
   }
 
   #mainIndentation(options: PrintOptions): string {
@@ -423,7 +357,7 @@ export class PrintableShellCommand {
     }
     // biome-ignore lint/suspicious/noTsIgnore: We don't want linting to depend on *broken* type checking.
     // @ts-ignore: The TypeScript checker has trouble reconciling the optional (i.e. potentially `undefined`) `options` with the third argument.
-    const subprocess = spawn(...this.forNode(), {
+    const subprocess = spawn(...this.toCommandWithFlatArgs(), {
       ...(options as object),
       cwd,
     }) as NodeChildProcess & {
@@ -661,117 +595,6 @@ export class PrintableShellCommand {
   ): Promise<void> {
     await this.print().spawnTransparently(options).success;
   }
-
-  /**
-   * The returned subprocess includes a `.success` `Promise` field, per https://github.com/oven-sh/bun/issues/8313
-   */
-  #spawnBun<
-    const In extends BunSpawnOptions.Writable = "ignore",
-    const Out extends BunSpawnOptions.Readable = "pipe",
-    const Err extends BunSpawnOptions.Readable = "inherit",
-  >(
-    options?: BunWithCwd<
-      Omit<BunSpawnOptions.OptionsObject<In, Out, Err>, "cmd">
-    >,
-  ): BunSubprocess<In, Out, Err> & { success: Promise<void> } {
-    if (options && "cmd" in options) {
-      throw new Error("Unexpected `cmd` field.");
-    }
-    const { spawn } = process.getBuiltinModule("bun") as typeof import("bun");
-    const cwd = stringifyIfPath(options?.cwd);
-    const subprocess = spawn({
-      ...options,
-      cwd,
-      cmd: this.forBun(),
-    }) as BunSubprocess<In, Out, Err> & { success: Promise<void> };
-    Object.defineProperty(subprocess, "success", {
-      get() {
-        return new Promise<void>((resolve, reject) =>
-          this.exited
-            .then((exitCode: number) => {
-              if (exitCode === 0) {
-                resolve();
-              } else {
-                reject(
-                  new Error(
-                    `Command failed with non-zero exit code: ${exitCode}`,
-                  ),
-                );
-              }
-            })
-            .catch(reject),
-        );
-      },
-      enumerable: false,
-    });
-    return subprocess;
-  }
-
-  #spawnBunInherit(
-    options?: BunWithCwd<
-      Omit<
-        BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
-        "cmd" | "stdio"
-      >
-    >,
-  ): BunSubprocess<"inherit", "inherit", "inherit"> & {
-    success: Promise<void>;
-  } {
-    if (options && "stdio" in options) {
-      throw new Error("Unexpected `stdio` field.");
-    }
-    return this.bun.spawnBun({
-      ...options,
-      stdio: ["inherit", "inherit", "inherit"],
-    });
-  }
-
-  #spawnBunStdout(
-    options?: BunWithCwd<
-      Omit<
-        BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
-        "cmd" | "stdio"
-      >
-    >,
-  ): Response {
-    // biome-ignore lint/suspicious/noExplicitAny: Avoid breaking the lib check when used without `@types/bun`.
-    return new Response((this.bun.spawnBun(options) as any).stdout);
-  }
-
-  async #shellOutBun(
-    options?: BunWithCwd<
-      Omit<
-        BunSpawnOptions.OptionsObject<"inherit", "inherit", "inherit">,
-        "cmd" | "stdio"
-      >
-    >,
-  ): Promise<void> {
-    await this.print().bun.spawnBunInherit(options).success;
-  }
-
-  bun = {
-    /** Equivalent to:
-     *
-     * ```
-     * await this.print().bun.spawnBunInherit(…).success;
-     * ```
-     */
-    spawnBun: this.#spawnBun.bind(this),
-    /**
-     * A wrapper for `.spawnBunInherit(…)` that sets stdio to `"inherit"` (common
-     * for invoking commands from scripts whose output and interaction should be
-     * surfaced to the user).
-     */
-    spawnBunInherit: this.#spawnBunInherit.bind(this),
-    /** Equivalent to:
-     *
-     * ```
-     * new Response(this.bun.spawnBun(…).stdout);
-     * ```
-     */
-    spawnBunStdout: this.#spawnBunStdout.bind(this),
-    shellOutBun: this.#shellOutBun.bind(this),
-  };
 }
 
 export function escapeArg(
