@@ -1,6 +1,5 @@
 import { expect, spyOn, test } from "bun:test";
 import { createWriteStream } from "node:fs";
-import { chmod } from "node:fs/promises";
 import { stderr, stdout } from "node:process";
 import { Path } from "path-class";
 import { PrintableShellCommand } from "../src";
@@ -212,7 +211,7 @@ console.log("hi");`);
   expect(() => new PrintableShellCommand(binPath, []).text()).toThrow(
     /EACCES|Premature close/,
   );
-  await chmod(binPath.path, 0o755);
+  await binPath.chmod(0o755);
   expect(await new PrintableShellCommand(binPath, []).text()).toEqual("hi\n");
 });
 
