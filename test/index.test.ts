@@ -1,5 +1,6 @@
 import { expect, spyOn, test } from "bun:test";
 import { createWriteStream } from "node:fs";
+import { chmod } from "node:fs/promises";
 import { stderr, stdout } from "node:process";
 import { Path } from "path-class";
 import { PrintableShellCommand } from "../src";
@@ -198,6 +199,21 @@ test("don't line wrap after command (when there are no args)", () => {
       skipLineWrapBeforeFirstArg: true,
     }),
   ).toEqual(`echo`);
+});
+
+test("Throws spawning error if the command can't be executed.", async () => {
+  const binPath = (await Path.makeTempDir()).join("nonexistent.bin");
+  expect(() => new PrintableShellCommand(binPath, []).text()).toThrow(
+    /ENOENT|Premature close/,
+  );
+  await binPath.write(`#!/usr/bin/env -S bun run --
+
+console.log("hi");`);
+  expect(() => new PrintableShellCommand(binPath, []).text()).toThrow(
+    /EACCES|Premature close/,
+  );
+  await chmod(binPath.path, 0o755);
+  expect(await new PrintableShellCommand(binPath, []).text()).toEqual("hi\n");
 });
 
 test("spawnDetached", async () => {

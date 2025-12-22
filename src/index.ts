@@ -366,7 +366,7 @@ export class PrintableShellCommand {
     // TODO: define properties on prototypes instead.
     Object.defineProperty(subprocess, "success", {
       get() {
-        return new Promise<void>((resolve, reject) =>
+        return new Promise<void>((resolve, reject) => {
           this.addListener(
             "exit",
             (exitCode: number /* we only use the first arg */) => {
@@ -376,8 +376,12 @@ export class PrintableShellCommand {
                 reject(`Command failed with non-zero exit code: ${exitCode}`);
               }
             },
-          ),
-        );
+          );
+          // biome-ignore lint/suspicious/noExplicitAny: We don't have the type available.
+          this.addListener("error", (err: any) => {
+            reject(err);
+          });
+        });
       },
       enumerable: false,
     });
