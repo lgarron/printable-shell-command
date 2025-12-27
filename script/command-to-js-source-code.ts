@@ -3,7 +3,7 @@
 import { default as assert } from "node:assert";
 import { argv } from "node:process";
 import { styleText } from "node:util";
-import { escapeArg } from "../src";
+import { escapeArg } from "../src/PrintableShellCommand";
 
 const [command, ...ungroupedArgs] = argv.slice(2);
 const groupedArgs: (string | string[])[] = [];
