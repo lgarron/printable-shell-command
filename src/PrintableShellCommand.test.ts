@@ -319,6 +319,32 @@ foo.txt
 `);
 });
 
+test(".stdout(…)", async () => {
+  expect(
+    await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
+      .stderr()
+      .text(),
+  ).toEqual("hi\n");
+  expect(
+    await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
+      .stdout()
+      .text(),
+  ).toEqual("");
+});
+
+test(".stderr(…)", async () => {
+  expect(
+    await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
+      .stdout()
+      .text(),
+  ).toEqual("");
+  expect(
+    await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
+      .stderr()
+      .text(),
+  ).toEqual("hi\n");
+});
+
 test(".text()", async () => {
   expect(await new PrintableShellCommand("echo", ["-n", "hi"]).text()).toEqual(
     "hi",

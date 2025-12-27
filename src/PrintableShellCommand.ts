@@ -525,6 +525,26 @@ export class PrintableShellCommand {
     return new Response(Readable.from(this.#stdoutSpawnGenerator(options)));
   }
 
+  #stderrSpawnGenerator(
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
+  ): AsyncGenerator<string> {
+    if (options && "stdio" in options) {
+      throw new Error("Unexpected `stdio` field.");
+    }
+    const subprocess = this.spawn({
+      ...options,
+      stdio: ["ignore", "inherit", "pipe"],
+    });
+    return this.#generator(subprocess.stderr, subprocess.success);
+  }
+
+  public stderr(
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
+  ): Response {
+    // TODO: Use `ReadableStream.from(…)` once `bun` implements it: https://github.com/oven-sh/bun/pull/21269
+    return new Response(Readable.from(this.#stderrSpawnGenerator(options)));
+  }
+
   async *#split0(generator: AsyncGenerator<string>): AsyncGenerator<string> {
     let pending = "";
     for await (const chunk of generator) {
