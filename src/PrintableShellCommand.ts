@@ -58,6 +58,14 @@ type SingleArgument = string | Path;
 type ArgsEntry = SingleArgument | SingleArgument[];
 type Args = ArgsEntry[];
 
+const ARGUMENT_LINE_WRAPPING_VALUES = [
+  "by-entry",
+  "nested-by-entry",
+  "by-argument",
+  "inline",
+] as const;
+type ArgumentLineWrapping = (typeof ARGUMENT_LINE_WRAPPING_VALUES)[number];
+
 export interface PrintOptions {
   /** Defaults to "" */
   mainIndentation?: string;
@@ -72,11 +80,7 @@ export interface PrintOptions {
    */
   quoting?: "auto" | "extra-safe";
   /** Line wrapping to use between arguments. Defaults to `"by-entry"`. */
-  argumentLineWrapping?:
-    | "by-entry"
-    | "nested-by-entry"
-    | "by-argument"
-    | "inline";
+  argumentLineWrapping?: ArgumentLineWrapping;
   /** Include the first arg (or first arg group) on the same line as the command, regardless of the `argumentLineWrapping` setting. */
   skipLineWrapBeforeFirstArg?: true | false;
   /**
@@ -597,12 +601,17 @@ export class PrintableShellCommand {
    */
   public async shellOut(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">> & {
-      print: StreamPrintOptions | false;
+      print: StreamPrintOptions | ArgumentLineWrapping | false;
     },
   ): Promise<void> {
     const { print: printOptions, ...spawnOptions } = options ?? {};
     if (printOptions) {
-      this.print(printOptions);
+      if (typeof printOptions === "string") {
+        assert(ARGUMENT_LINE_WRAPPING_VALUES.includes(printOptions));
+        this.print({ argumentLineWrapping: printOptions });
+      } else {
+        this.print(printOptions);
+      }
     }
     await this.spawnTransparently(spawnOptions).success;
   }
