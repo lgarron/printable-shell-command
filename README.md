@@ -55,20 +55,6 @@ await command.spawnTransparently().success;
 await command.spawnDetached().success;
 ```
 
-### Spawn a process in `bun`
-
-```typescript
-import { PrintableShellCommand } from "printable-shell-command";
-import { spawn } from "bun";
-
-const command = new PrintableShellCommand(/* … */);
-await spawn(command.toFlatCommand()).exited;
-
-// or directly
-await command.bun.spawnBun().success;
-await command.bun.spawnBunInherit().success;
-```
-
 ## Protections
 
 Any command or argument containing the following characters is quoted and escaped:
