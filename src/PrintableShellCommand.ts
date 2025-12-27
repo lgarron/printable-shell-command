@@ -592,7 +592,7 @@ export class PrintableShellCommand {
   /** Equivalent to:
    *
    * ```
-   * await this.print().spawnTransparently(…).success;
+   * await this.print(…).spawnTransparently(…).success;
    * ```
    */
   public async shellOut(
