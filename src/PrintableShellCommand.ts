@@ -596,9 +596,15 @@ export class PrintableShellCommand {
    * ```
    */
   public async shellOut(
-    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">> & {
+      print: StreamPrintOptions | false;
+    },
   ): Promise<void> {
-    await this.print().spawnTransparently(options).success;
+    const { print: printOptions, ...spawnOptions } = options ?? {};
+    if (printOptions) {
+      this.print(printOptions);
+    }
+    await this.spawnTransparently(spawnOptions).success;
   }
 }
 
