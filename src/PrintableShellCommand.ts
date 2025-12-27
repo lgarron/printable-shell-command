@@ -601,7 +601,7 @@ export class PrintableShellCommand {
    */
   public async shellOut(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">> & {
-      print: StreamPrintOptions | ArgumentLineWrapping | false;
+      print?: StreamPrintOptions | ArgumentLineWrapping | false;
     },
   ): Promise<void> {
     const { print: printOptions, ...spawnOptions } = options ?? {};
