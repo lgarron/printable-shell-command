@@ -86,10 +86,10 @@ export interface PrintOptions {
    *
    * ```
    * new PrintableShellCommand("echo", ["hi"]).print({
-   *   styleTextFormat: ["green", "underline"],
+   *   style: ["green", "underline"],
    * });
    * */
-  styleTextFormat?: StyleTextFormat;
+  style?: StyleTextFormat;
 }
 
 export interface StreamPrintOptions extends PrintOptions {
@@ -286,8 +286,8 @@ export class PrintableShellCommand {
       escapeArg(this.commandName, true, options) +
       this.#separatorAfterCommand(options, serializedEntries.length) +
       serializedEntries.join(this.#intraEntrySeparator(options));
-    if (options?.styleTextFormat) {
-      text = styleText(options.styleTextFormat, text);
+    if (options?.style) {
+      text = styleText(options.style, text);
     }
     return text;
   }
@@ -298,7 +298,7 @@ export class PrintableShellCommand {
    * By default, this will be auto-styled (as bold gray) when `.isTTY` is true
    * for the stream. `.isTTY` is populated for the {@link stderr} and
    * {@link stdout} objects. Pass `"autoStyle": "never"` or an explicit
-   * `styleTextFormat` to disable this.
+   * `style` to disable this.
    *
    */
   public print(options?: StreamPrintOptions): PrintableShellCommand {
@@ -306,7 +306,7 @@ export class PrintableShellCommand {
     // Note: we only need to modify top-level fields, so `structuredClone(…)`
     // would be overkill and can only cause performance issues.
     const optionsCopy = { ...options };
-    optionsCopy.styleTextFormat ??=
+    optionsCopy.style ??=
       options?.autoStyle !== "never" &&
       (stream as { isTTY?: boolean }).isTTY === true
         ? TTY_AUTO_STYLE

@@ -152,9 +152,7 @@ test("command with equal sign is escaped by default", () => {
 });
 
 test("stylin'", () => {
-  expect(
-    rsyncCommand.getPrintableCommand({ styleTextFormat: ["gray", "bold"] }),
-  ).toEqual(
+  expect(rsyncCommand.getPrintableCommand({ style: ["gray", "bold"] })).toEqual(
     `\u001B[90m\u001B[1mrsync \\
   -avz \\
   --exclude .DS_Store \\
