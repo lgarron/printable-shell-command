@@ -17,7 +17,7 @@ lint-biome: setup
 
 .PHONY: lint-tsc
 lint-tsc: setup
-	bun x tsc --noEmit --project .
+	bun x tsc --project .
 
 .PHONY: check-package.json
 check-package.json: build

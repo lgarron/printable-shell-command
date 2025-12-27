@@ -1,4 +1,5 @@
 {
   "extends": "./node_modules/@cubing/dev-config/ts/es2024-types/no-dom/tsconfig.json",
-  "exclude": ["./dist", "./test/"]
+  "compilerOptions": { "noEmit": true },
+  "exclude": ["./dist", "./test/simple-test-node.ts"]
 }

@@ -1,8 +1,9 @@
 import { expect, spyOn, test } from "bun:test";
+import assert from "node:assert";
 import { createWriteStream } from "node:fs";
 import { stderr, stdout } from "node:process";
 import { Path } from "path-class";
-import { PrintableShellCommand } from "../src";
+import { PrintableShellCommand } from ".";
 
 globalThis.process.stdout.isTTY = false;
 
@@ -375,8 +376,9 @@ test(".text0(…) missing trailing NUL (workaround version)", async () => {
       new PrintableShellCommand("printf", ["a\\0b"]).text0(),
     );
   } catch (e) {
-    caught = e;
+    caught = e as Error;
   }
+  assert(caught);
   expect(caught).toBeInstanceOf(Error);
   expect(caught.toString()).toEqual(
     "Error: Missing a trailing NUL character at the end of a NUL-delimited stream.",
@@ -408,12 +410,19 @@ test(".json0(…) missing trailing NUL (workaround version)", async () => {
       new PrintableShellCommand("printf", ["%s\\0%s", "[]", '[""]']).json0(),
     );
   } catch (e) {
-    caught = e;
+    caught = e as Error;
   }
   expect(caught).toBeInstanceOf(Error);
+  // Types are not powerful enough to infer this from last line.
+  assert(caught);
   expect(caught.toString()).toEqual(
     "Error: Missing a trailing NUL character at the end of a NUL-delimited stream.",
   );
+});
+
+test(".shellOut()", async () => {
+  await new PrintableShellCommand("echo", ["hi"]).shellOut();
+  // await new PrintableShellCommand(("echo"), ["hi"]).shellOut({print: {styleTextFormat: "bgYellow"}});
 });
 
 const spyStderr = spyOn(stderr, "write");
