@@ -345,6 +345,7 @@ export class PrintableShellCommand {
   ) => {
     const { spawn } = process.getBuiltinModule("node:child_process");
     const cwd = stringifyIfPath(options?.cwd);
+    options = { ...options };
     if (this.#stdinSource) {
       options ??= {};
       if (typeof options.stdio === "undefined") {
@@ -353,7 +354,7 @@ export class PrintableShellCommand {
       if (typeof options.stdio === "string") {
         options.stdio = new Array(3).fill(options.stdio);
       }
-      options.stdio[0] = "pipe";
+      options.stdio = ["pipe", ...options.stdio.slice(1)];
     }
     // biome-ignore lint/suspicious/noTsIgnore: We don't want linting to depend on *broken* type checking.
     // @ts-ignore: The TypeScript checker has trouble reconciling the optional (i.e. potentially `undefined`) `options` with the third argument.
