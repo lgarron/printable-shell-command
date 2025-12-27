@@ -13,11 +13,12 @@ lint: setup lint-biome lint-tsc
 
 .PHONY: lint-biome
 lint-biome: setup
-	bun x @biomejs/biome check
+	bun x -- bun-dx --package @biomejs/biome biome -- check
+	bun x -- bun-dx --package readme-cli-help readme-cli-help -- check
 
 .PHONY: lint-tsc
 lint-tsc: setup
-	bun x tsc --project .
+	bun x -- bun-dx --package typescript tsc -- --project .
 
 .PHONY: check-package.json
 check-package.json: build
@@ -25,7 +26,8 @@ check-package.json: build
 
 .PHONY: format
 format: setup
-	bun x @biomejs/biome check --write
+	bun x -- bun-dx --package @biomejs/biome biome -- check --write
+	bun x -- bun-dx --package readme-cli-help readme-cli-help -- update
 
 .PHONY: test-js
 test-js: setup
