@@ -11,6 +11,10 @@ await build({
 
 await new PrintableShellCommand("bun", [
   "x",
+  "--",
+  "bun-dx",
+  ["--package", "typescript"],
   "tsc",
-  ["--project", "./tsconfig.build.json"],
+  "--",
+  ["--project", "./tsconfig.build-types.json"],
 ]).shellOut();

@@ -1,0 +1,9 @@
+{
+  "extends": "./node_modules/@cubing/dev-config/ts/es2024-types/no-dom/tsconfig.json",
+  "compilerOptions": { "rootDir": ".", "noEmit": true },
+  "exclude": [
+    "./dist/",
+    // We need to exclude `test` because it imports from `./dist` (on purpose).
+    "./test/"
+  ]
+}
