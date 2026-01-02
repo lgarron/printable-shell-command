@@ -372,15 +372,20 @@ export class PrintableShellCommand {
     Object.defineProperty(subprocess, "success", {
       get() {
         return new Promise<void>((resolve, reject) => {
+          function handle(exitCode: number) {
+            if (exitCode === 0) {
+              resolve();
+            } else {
+              reject(`Command failed with non-zero exit code: ${exitCode}`);
+            }
+          }
+          if (subprocess.exitCode !== null) {
+            handle(subprocess.exitCode);
+          }
           this.addListener(
             "exit",
-            (exitCode: number /* we only use the first arg */) => {
-              if (exitCode === 0) {
-                resolve();
-              } else {
-                reject(`Command failed with non-zero exit code: ${exitCode}`);
-              }
-            },
+            /* we only use the first arg */
+            handle,
           );
           // biome-ignore lint/suspicious/noExplicitAny: We don't have the type available.
           this.addListener("error", (err: any) => {
@@ -395,8 +400,12 @@ export class PrintableShellCommand {
       const s = subprocess as unknown as Readable &
         WithStdoutResponse &
         WithSuccess;
+      let cachedResponse: Response | undefined;
       s.stdout.response = () =>
-        new Response(Readable.from(this.#generator(s.stdout, s.success)));
+        // biome-ignore lint/suspicious/noAssignInExpressions: TODO: https://github.com/biomejs/biome/discussions/7592
+        (cachedResponse ??= new Response(
+          Readable.from(this.#generator(s.stdout, s.success)),
+        ));
       s.stdout.text = () => s.stdout.response().text();
       const thisCached = this; // TODO: make this type-check using `.bind(…)`
       s.stdout.text0 = async function* () {
@@ -409,8 +418,12 @@ export class PrintableShellCommand {
       const s = subprocess as unknown as Readable &
         WithStderrResponse &
         WithSuccess;
+      let cachedResponse: Response | undefined;
       s.stderr.response = () =>
-        new Response(Readable.from(this.#generator(s.stderr, s.success)));
+        // biome-ignore lint/suspicious/noAssignInExpressions: TODO: https://github.com/biomejs/biome/discussions/7592
+        (cachedResponse ??= new Response(
+          Readable.from(this.#generator(s.stderr, s.success)),
+        ));
       s.stderr.text = () => s.stderr.response().text();
       const thisCached = this; // TODO: make this type-check using `.bind(…)`
       s.stderr.text0 = async function* () {

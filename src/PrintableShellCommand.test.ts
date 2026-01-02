@@ -345,6 +345,16 @@ test(".stderr(…)", async () => {
   ).toEqual("hi\n");
 });
 
+test(".stdout() and .stderr() — multiple success Promise awaiters", async () => {
+  const { stdout, stderr } = new PrintableShellCommand("echo", ["hi"]).spawn({
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  expect(await stdout.text()).toEqual("hi\n");
+  expect(() => stdout.text()).toThrow("Body already used");
+  expect(await stderr.text()).toEqual("");
+  expect(() => stderr.text()).toThrow("Body already used");
+});
+
 test(".text()", async () => {
   expect(await new PrintableShellCommand("echo", ["-n", "hi"]).text()).toEqual(
     "hi",
