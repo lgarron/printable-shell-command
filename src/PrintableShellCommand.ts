@@ -621,14 +621,17 @@ export class PrintableShellCommand {
    */
   public async shellOut(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">> & {
-      print?: StreamPrintOptions | ArgumentLineWrapping | false;
+      print?: StreamPrintOptions | ArgumentLineWrapping | boolean;
     },
   ): Promise<void> {
     const { print: printOptions, ...spawnOptions } = options ?? {};
+
     if (printOptions) {
       if (typeof printOptions === "string") {
         assert(ARGUMENT_LINE_WRAPPING_VALUES.includes(printOptions));
         this.print({ argumentLineWrapping: printOptions });
+      } else if (printOptions === true) {
+        this.print();
       } else {
         this.print(printOptions);
       }

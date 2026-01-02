@@ -446,11 +446,20 @@ test(".json0(…) missing trailing NUL (workaround version)", async () => {
 
 test(".shellOut()", async () => {
   await new PrintableShellCommand("echo", ["hi"]).shellOut();
-  // await new PrintableShellCommand(("echo"), ["hi"]).shellOut({print: {styleTextFormat: "bgYellow"}});
+  await new PrintableShellCommand("echo", ["hi"]).shellOut({
+    print: { style: ["red", "bgYellow"] },
+  });
 });
 
-const spyStderr = spyOn(stderr, "write");
 const spyStdout = spyOn(stdout, "write");
+const spyStderr = spyOn(stderr, "write");
+
+function resetMocks() {
+  spyStdout.mockReset();
+  spyStderr.mockReset();
+  globalThis.process.stdout.isTTY = false;
+  globalThis.process.stderr.isTTY = false;
+}
 
 const PLAIN_ECHO: [string][] = [["echo \\\n  hi"], ["\n"]];
 const BOLD_GRAY_ECHO: [string][] = [
@@ -458,13 +467,13 @@ const BOLD_GRAY_ECHO: [string][] = [
   ["\n"],
 ];
 
-test("tty (stderr)", async () => {
-  globalThis.process.stderr.isTTY = false;
+test.serial("tty (stderr)", async () => {
+  resetMocks();
+
   new PrintableShellCommand("echo", ["hi"]).print();
   expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
   expect(spyStdout.mock.lastCall).toEqual(undefined);
 
-  globalThis.process.stderr.isTTY = false;
   new PrintableShellCommand("echo", ["hi"]).print({
     autoStyle: "tty",
   });
@@ -487,8 +496,9 @@ test("tty (stderr)", async () => {
   expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
 });
 
-test("tty (stdout)", async () => {
-  spyStderr.mockReset();
+test.serial("tty (stdout)", async () => {
+  resetMocks();
+
   globalThis.process.stdout.isTTY = false;
   new PrintableShellCommand("echo", ["hi"]).print({ stream: stdout });
   expect(spyStderr.mock.lastCall).toEqual(undefined);
@@ -521,10 +531,25 @@ test("tty (stdout)", async () => {
   expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
 });
 
-test("tty (fd 3)", async () => {
-  spyStdout.mockReset();
-  spyStderr.mockReset();
-  globalThis.process.stdout.isTTY = false;
+test.serial(".shellOut({ print: false })", async () => {
+  resetMocks();
+
+  await new PrintableShellCommand("echo", ["hi"]).shellOut({ print: false });
+  expect(spyStdout.mock.lastCall).toEqual(undefined);
+  expect(spyStderr.mock.lastCall).toEqual(undefined);
+});
+
+test.serial(".shellOut({ print: true })", async () => {
+  resetMocks();
+
+  await new PrintableShellCommand("echo", ["hi"]).shellOut({ print: true });
+  expect(spyStdout.mock.lastCall).toEqual(undefined);
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+});
+
+// TODO: why do unrelated tests receive an unexpected newline on `stderr` if this test is not last?
+test.serial("tty (fd 3)", async () => {
+  resetMocks();
 
   const stream = createWriteStream("", { fd: 3 });
 
