@@ -472,6 +472,7 @@ function resetMocks() {
 }
 
 const PLAIN_ECHO: [string][] = [["echo \\\n  hi"], ["\n"]];
+const PLAIN_ECHO_INLINE: [string][] = [["echo hi"], ["\n"]];
 const BOLD_GRAY_ECHO: [string][] = [
   ["\u001b[90m\u001b[1mecho \\\n  hi\u001b[22m\u001b[39m"],
   ["\n"],
@@ -541,6 +542,14 @@ test.serial("tty (stdout)", async () => {
   expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
 });
 
+test.serial(".shellOut()", async () => {
+  resetMocks();
+
+  await new PrintableShellCommand("echo", ["hi"]).shellOut();
+  expect(spyStdout.mock.lastCall).toEqual(undefined);
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+});
+
 test.serial(".shellOut({ print: false })", async () => {
   resetMocks();
 
@@ -555,6 +564,14 @@ test.serial(".shellOut({ print: true })", async () => {
   await new PrintableShellCommand("echo", ["hi"]).shellOut({ print: true });
   expect(spyStdout.mock.lastCall).toEqual(undefined);
   expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+});
+
+test.serial('.shellOut({: "inline" })', async () => {
+  resetMocks();
+
+  await new PrintableShellCommand("echo", ["hi"]).shellOut({ print: "inline" });
+  expect(spyStdout.mock.lastCall).toEqual(undefined);
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO_INLINE);
 });
 
 // TODO: why do unrelated tests receive an unexpected newline on `stderr` if this test is not last?

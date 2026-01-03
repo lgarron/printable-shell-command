@@ -639,15 +639,15 @@ export class PrintableShellCommand {
   ): Promise<void> {
     const { print: printOptions, ...spawnOptions } = options ?? {};
 
-    if (printOptions) {
-      if (typeof printOptions === "string") {
-        assert(ARGUMENT_LINE_WRAPPING_VALUES.includes(printOptions));
-        this.print({ argumentLineWrapping: printOptions });
-      } else if (printOptions === true) {
-        this.print();
-      } else {
-        this.print(printOptions);
-      }
+    if (typeof printOptions === "string") {
+      assert(ARGUMENT_LINE_WRAPPING_VALUES.includes(printOptions));
+      this.print({ argumentLineWrapping: printOptions });
+    } else if (printOptions === true) {
+      this.print();
+    } else if (printOptions === false) {
+      // no-op
+    } else {
+      this.print(printOptions);
     }
     await this.spawnTransparently(spawnOptions).success;
   }
