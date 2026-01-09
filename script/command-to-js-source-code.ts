@@ -3,6 +3,7 @@
 import { default as assert } from "node:assert";
 import { argv } from "node:process";
 import { styleText } from "node:util";
+import { default as clipboardy } from "clipboardy";
 import { escapeArg } from "../src/PrintableShellCommand";
 
 const [command, ...ungroupedArgs] = argv.slice(2);
@@ -58,7 +59,15 @@ for (const arg of ungroupedArgs) {
   }
 }
 
-console.log(`new PrintableShellCommand(
+const commandSource = `new PrintableShellCommand(
   ${JSON.stringify(command)},
   ${JSON.stringify(groupedArgs)}
-)`);
+)`;
+
+if (await askYesNo("📋 Copy to clipboard?", { default: "y" })) {
+  clipboardy.write(commandSource);
+  // await new PrintableShellCommand("pbcopy", [])
+  //   .stdin({ text: commandSource })
+  //   .shellOut({ print: false });
+  console.log("↪ ✅ Copied!");
+}
