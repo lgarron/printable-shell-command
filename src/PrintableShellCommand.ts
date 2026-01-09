@@ -17,6 +17,12 @@ import type {
   WithStdoutResponse,
   WithSuccess,
 } from "./spawn";
+import {
+  handleTrailingNewlines,
+  type TrailingNewlineOptions,
+  wrapHandleTrailingNewlinesForResponse,
+  wrapHandleTrailingNewlinesForText,
+} from "./trimTrailingNewlines";
 
 // TODO: does this import work?
 /**
@@ -403,10 +409,10 @@ export class PrintableShellCommand {
       let cachedResponse: Response | undefined;
       s.stdout.response = () =>
         // biome-ignore lint/suspicious/noAssignInExpressions: TODO: https://github.com/biomejs/biome/discussions/7592
-        (cachedResponse ??= new Response(
-          Readable.from(this.#generator(s.stdout, s.success)),
+        (cachedResponse ??= wrapHandleTrailingNewlinesForResponse(
+          new Response(Readable.from(this.#generator(s.stdout, s.success))),
         ));
-      s.stdout.text = () => s.stdout.response().text();
+      s.stdout.text = wrapHandleTrailingNewlinesForText(s.stdout.response());
       const thisCached = this; // TODO: make this type-check using `.bind(…)`
       s.stdout.text0 = async function* () {
         yield* thisCached.#split0(thisCached.#generator(s.stdout, s.success));
@@ -421,10 +427,10 @@ export class PrintableShellCommand {
       let cachedResponse: Response | undefined;
       s.stderr.response = () =>
         // biome-ignore lint/suspicious/noAssignInExpressions: TODO: https://github.com/biomejs/biome/discussions/7592
-        (cachedResponse ??= new Response(
-          Readable.from(this.#generator(s.stderr, s.success)),
+        (cachedResponse ??= wrapHandleTrailingNewlinesForResponse(
+          new Response(Readable.from(this.#generator(s.stderr, s.success))),
         ));
-      s.stderr.text = () => s.stderr.response().text();
+      s.stderr.text = wrapHandleTrailingNewlinesForText(s.stderr.response());
       const thisCached = this; // TODO: make this type-check using `.bind(…)`
       s.stderr.text0 = async function* () {
         yield* thisCached.#split0(thisCached.#generator(s.stderr, s.success));
@@ -533,9 +539,13 @@ export class PrintableShellCommand {
 
   public stdout(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
-  ): Response {
+  ): Response & {
+    text: (options?: TrailingNewlineOptions) => Promise<string>;
+  } {
     // TODO: Use `ReadableStream.from(…)` once `bun` implements it: https://github.com/oven-sh/bun/pull/21269
-    return new Response(Readable.from(this.#stdoutSpawnGenerator(options)));
+    return wrapHandleTrailingNewlinesForResponse(
+      new Response(Readable.from(this.#stdoutSpawnGenerator(options))),
+    );
   }
 
   #stderrSpawnGenerator(
@@ -553,9 +563,13 @@ export class PrintableShellCommand {
 
   public stderr(
     options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
-  ): Response {
+  ): Response & {
+    text: (options?: TrailingNewlineOptions) => Promise<string>;
+  } {
     // TODO: Use `ReadableStream.from(…)` once `bun` implements it: https://github.com/oven-sh/bun/pull/21269
-    return new Response(Readable.from(this.#stderrSpawnGenerator(options)));
+    return wrapHandleTrailingNewlinesForResponse(
+      new Response(Readable.from(this.#stderrSpawnGenerator(options))),
+    );
   }
 
   async *#split0(generator: AsyncGenerator<string>): AsyncGenerator<string> {
@@ -580,10 +594,18 @@ export class PrintableShellCommand {
    *
    * This can make some simple invocations easier to read and/or fit on a single line.
    */
-  public text(
-    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">>,
+  public async text(
+    options?: NodeWithCwd<Omit<NodeSpawnOptions, "stdio">> & {
+      trimTrailingNewlines: "single-required" | "single-if-present" | "never";
+    },
   ): Promise<string> {
-    return this.stdout(options).text();
+    const {
+      trimTrailingNewlines: trimTrailingNewlinesOption,
+      ...spawnOptions
+    } = options ?? {};
+    return handleTrailingNewlines(this.stdout(spawnOptions).text(), {
+      trimTrailingNewlines: trimTrailingNewlinesOption,
+    });
   }
 
   /**

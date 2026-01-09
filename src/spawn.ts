@@ -11,6 +11,7 @@ import type {
 } from "node:child_process";
 import type { Readable, Writable } from "node:stream";
 import type { Path } from "path-class";
+import type { TrailingNewlineOptions } from "./trimTrailingNewlines";
 
 export type NodeCwd = ProcessEnvOptions["cwd"] | Path;
 export type NodeWithCwd<T extends { cwd?: ProcessEnvOptions["cwd"] }> = Omit<
@@ -24,7 +25,7 @@ export interface WithSuccess {
 
 export interface WithResponse {
   response: () => Response;
-  text: () => Promise<string>;
+  text: (options?: TrailingNewlineOptions) => Promise<string>;
   text0: () => AsyncGenerator<string>;
   json: <T>() => Promise<T>;
 }

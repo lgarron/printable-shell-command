@@ -332,6 +332,60 @@ test(".stdout(…)", async () => {
   ).toEqual("");
 });
 
+test(".stdout().text({ trimTrailingNewlines: … })", async () => {
+  expect(() =>
+    new PrintableShellCommand("echo", ["-n", "hi"]).stdout().text({
+      trimTrailingNewlines: "single-required",
+    }),
+  ).toThrow("Trailing newline required, but not present.");
+  expect(
+    await new PrintableShellCommand("echo", ["hi"]).stdout().text({
+      trimTrailingNewlines: "single-required",
+    }),
+  ).toEqual("hi");
+  expect(
+    await new PrintableShellCommand("echo", ["hi"]).stdout().text({
+      trimTrailingNewlines: "single-if-present",
+    }),
+  ).toEqual("hi");
+  expect(
+    await new PrintableShellCommand("echo", ["hi"]).stdout().text({
+      trimTrailingNewlines: "never",
+    }),
+  ).toEqual("hi\n");
+});
+
+test(".stdout.text({ trimTrailingNewlines: … })", async () => {
+  expect(() =>
+    new PrintableShellCommand("echo", ["-n", "hi"])
+      .spawn({ stdio: ["ignore", "pipe", "ignore"] })
+      .stdout.text({
+        trimTrailingNewlines: "single-required",
+      }),
+  ).toThrow("Trailing newline required, but not present.");
+  expect(
+    await new PrintableShellCommand("echo", ["hi"])
+      .spawn({ stdio: ["ignore", "pipe", "ignore"] })
+      .stdout.text({
+        trimTrailingNewlines: "single-required",
+      }),
+  ).toEqual("hi");
+  expect(
+    await new PrintableShellCommand("echo", ["hi"])
+      .spawn({ stdio: ["ignore", "pipe", "ignore"] })
+      .stdout.text({
+        trimTrailingNewlines: "single-if-present",
+      }),
+  ).toEqual("hi");
+  expect(
+    await new PrintableShellCommand("echo", ["hi"])
+      .spawn({ stdio: ["ignore", "pipe", "ignore"] })
+      .stdout.text({
+        trimTrailingNewlines: "never",
+      }),
+  ).toEqual("hi\n");
+});
+
 test(".stderr(…)", async () => {
   expect(
     await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
@@ -342,6 +396,66 @@ test(".stderr(…)", async () => {
     await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
       .stderr()
       .text(),
+  ).toEqual("hi\n");
+});
+
+test(".stderr().text({ trimTrailingNewlines: … })", async () => {
+  expect(() =>
+    new PrintableShellCommand("bash", ["-c", "echo -n hi 1>&2"]).stderr().text({
+      trimTrailingNewlines: "single-required",
+    }),
+  ).toThrow("Trailing newline required, but not present.");
+  expect(
+    await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
+      .stderr()
+      .text({
+        trimTrailingNewlines: "single-required",
+      }),
+  ).toEqual("hi");
+  expect(
+    await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
+      .stderr()
+      .text({
+        trimTrailingNewlines: "single-if-present",
+      }),
+  ).toEqual("hi");
+  expect(
+    await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
+      .stderr()
+      .text({
+        trimTrailingNewlines: "never",
+      }),
+  ).toEqual("hi\n");
+});
+
+test(".stderr.text({ trimTrailingNewlines: … })", async () => {
+  expect(() =>
+    new PrintableShellCommand("bash", ["-c", "echo -n hi 1>&2"])
+      .spawn({ stdio: ["ignore", "ignore", "pipe"] })
+      .stderr.text({
+        trimTrailingNewlines: "single-required",
+      }),
+  ).toThrow("Trailing newline required, but not present.");
+  expect(
+    await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
+      .spawn({ stdio: ["ignore", "ignore", "pipe"] })
+      .stderr.text({
+        trimTrailingNewlines: "single-required",
+      }),
+  ).toEqual("hi");
+  expect(
+    await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
+      .spawn({ stdio: ["ignore", "ignore", "pipe"] })
+      .stderr.text({
+        trimTrailingNewlines: "single-if-present",
+      }),
+  ).toEqual("hi");
+  expect(
+    await new PrintableShellCommand("bash", ["-c", "echo hi 1>&2"])
+      .spawn({ stdio: ["ignore", "ignore", "pipe"] })
+      .stderr.text({
+        trimTrailingNewlines: "never",
+      }),
   ).toEqual("hi\n");
 });
 
@@ -359,6 +473,29 @@ test(".text()", async () => {
   expect(await new PrintableShellCommand("echo", ["-n", "hi"]).text()).toEqual(
     "hi",
   );
+});
+
+test(".text({ trimTrailingNewlines: … })", async () => {
+  expect(() =>
+    new PrintableShellCommand("echo", ["-n", "hi"]).text({
+      trimTrailingNewlines: "single-required",
+    }),
+  ).toThrow("Trailing newline required, but not present.");
+  expect(
+    await new PrintableShellCommand("echo", ["hi"]).text({
+      trimTrailingNewlines: "single-required",
+    }),
+  ).toEqual("hi");
+  expect(
+    await new PrintableShellCommand("echo", ["hi"]).text({
+      trimTrailingNewlines: "single-if-present",
+    }),
+  ).toEqual("hi");
+  expect(
+    await new PrintableShellCommand("echo", ["hi"]).text({
+      trimTrailingNewlines: "never",
+    }),
+  ).toEqual("hi\n");
 });
 
 test(".text()", async () => {
