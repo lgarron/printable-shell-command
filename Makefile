@@ -17,8 +17,9 @@ lint-biome: setup
 	bun x -- bun-dx --package readme-cli-help readme-cli-help -- check
 
 .PHONY: lint-tsc
-lint-tsc: setup
-	bun x -- bun-dx --package typescript tsc -- --project .
+lint-tsc: setup build
+	bun x -- bun-dx --package typescript tsc -- --project ./tsconfig.json
+	bun x -- bun-dx --package typescript tsc -- --project ./test/tsconfig.json
 
 .PHONY: check-package.json
 check-package.json: build
