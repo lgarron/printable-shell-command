@@ -41,17 +41,22 @@ function wrapHandleTrailingNewlines(
     handleTrailingNewlines(fn(), options);
 }
 
-export function wrapHandleTrailingNewlinesForText(v: {
-  text: () => Promise<string>;
+export function wrapHandleTrailingNewlinesForResponder(v: {
+  response(): {
+    text: () => Promise<string>;
+  };
 }): (options?: TrailingNewlineOptions) => Promise<string> {
-  const originalTextFn = v.text.bind(v);
+  const response = v.response();
+  const originalTextFn = response.text.bind(response);
   return wrapHandleTrailingNewlines(originalTextFn);
 }
 
 export function wrapHandleTrailingNewlinesForResponse(
   response: Response,
 ): Response & { text: (options?: TrailingNewlineOptions) => Promise<string> } {
-  const textFn = wrapHandleTrailingNewlinesForText(response);
+  const textFn = wrapHandleTrailingNewlinesForResponder({
+    response: () => response,
+  });
   Object.defineProperty(response, "text", {
     get: () => {
       return textFn;

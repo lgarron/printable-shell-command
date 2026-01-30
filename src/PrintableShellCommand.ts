@@ -20,8 +20,8 @@ import type {
 import {
   handleTrailingNewlines,
   type TrailingNewlineOptions,
+  wrapHandleTrailingNewlinesForResponder,
   wrapHandleTrailingNewlinesForResponse,
-  wrapHandleTrailingNewlinesForText,
 } from "./trimTrailingNewlines";
 
 // TODO: does this import work?
@@ -374,10 +374,12 @@ export class PrintableShellCommand {
     }) as NodeChildProcess & {
       success: Promise<void>;
     };
+    let cachedSuccess: Promise<void> | undefined;
     // TODO: define properties on prototypes instead.
     Object.defineProperty(subprocess, "success", {
       get() {
-        return new Promise<void>((resolve, reject) => {
+        // biome-ignore lint/suspicious/noAssignInExpressions: TODO: https://github.com/biomejs/biome/discussions/7592
+        return (cachedSuccess ??= new Promise<void>((resolve, reject) => {
           function handle(exitCode: number) {
             if (exitCode === 0) {
               resolve();
@@ -397,7 +399,7 @@ export class PrintableShellCommand {
           this.addListener("error", (err: any) => {
             reject(err);
           });
-        });
+        }));
       },
       enumerable: false,
     });
@@ -412,7 +414,7 @@ export class PrintableShellCommand {
         (cachedResponse ??= wrapHandleTrailingNewlinesForResponse(
           new Response(Readable.from(this.#generator(s.stdout, s.success))),
         ));
-      s.stdout.text = wrapHandleTrailingNewlinesForText(s.stdout.response());
+      s.stdout.text = wrapHandleTrailingNewlinesForResponder(s.stdout);
       const thisCached = this; // TODO: make this type-check using `.bind(…)`
       s.stdout.text0 = async function* () {
         yield* thisCached.#split0(thisCached.#generator(s.stdout, s.success));
@@ -430,7 +432,7 @@ export class PrintableShellCommand {
         (cachedResponse ??= wrapHandleTrailingNewlinesForResponse(
           new Response(Readable.from(this.#generator(s.stderr, s.success))),
         ));
-      s.stderr.text = wrapHandleTrailingNewlinesForText(s.stderr.response());
+      s.stderr.text = wrapHandleTrailingNewlinesForResponder(s.stderr);
       const thisCached = this; // TODO: make this type-check using `.bind(…)`
       s.stderr.text0 = async function* () {
         yield* thisCached.#split0(thisCached.#generator(s.stderr, s.success));
