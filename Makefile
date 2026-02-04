@@ -1,6 +1,13 @@
 .PHONY: build
-build: setup
-	bun run script/build.ts
+build: build-js build-types
+
+.PHONY: build-js
+build-js: setup
+	bun run -- script/build-js.ts
+
+.PHONY: build-types
+build-types: setup
+	bun x -- bun-dx --package typescript tsc -- --project ./tsconfig.build-types.json
 
 .PHONY: check
 check: lint test build check-package.json
@@ -17,8 +24,14 @@ lint-biome: setup
 	bun x -- bun-dx --package readme-cli-help readme-cli-help -- check
 
 .PHONY: lint-tsc
-lint-tsc: setup build
+lint-tsc: lint-tsc-main lint-tsc-test-folder
+
+.PHONY: lint-tsc-main
+lint-tsc-main: setup
 	bun x -- bun-dx --package typescript tsc -- --project ./tsconfig.json
+
+.PHONY: lint-tsc-test-folder
+lint-tsc-test-folder: setup build
 	bun x -- bun-dx --package typescript tsc -- --project ./test/tsconfig.json
 
 .PHONY: check-package.json
