@@ -14,7 +14,7 @@ Point 1 is difficult, and maybe even impossible. This library will do its best, 
 
 ## Usage
 
-Construct a command by providing a command string and a list of arguments. Each argument can either be an individual string, or a "pair" list containing two strings (usually a command flag and its argument). Pairs do not affect the semantics of the command, but they affect pretty-printing.
+Construct a command by providing a command string and a list of argument entries. Each entry can either be an individual string, or a tuple containing two or more strings (usually a command flag and its argument). Grouping arguments into tuples controls pretty-printing, but does not affect the semantics of the command.
 
 ```typescript
 // example.ts
