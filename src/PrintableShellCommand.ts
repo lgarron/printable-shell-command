@@ -102,6 +102,25 @@ export interface PrintOptions {
   style?: StyleTextFormat;
 }
 
+/**
+ * https://no-color.org/
+ *
+ * > Command-line software which adds ANSI color to its output by default should
+ * > check for a NO_COLOR environment variable that, when present and not an
+ * > empty string (regardless of its value), prevents the addition of ANSI
+ * > color.
+ *
+ * I think it's a bit silly that `NO_COLOR=false` and `NO_COLOR=0` count as "no
+ * color please", but 🤷
+ *
+ */
+function NO_COLOR(): boolean {
+  const { env } = globalThis.process.getBuiltinModule("node:process");
+  // The empty string is falsy, so we can just use `!!`.
+  // biome-ignore lint/complexity/useLiteralKeys: TODO: https://github.com/biomejs/biome/discussions/7572
+  return !!env["NO_COLOR"];
+}
+
 export interface StreamPrintOptions extends PrintOptions {
   /**
    * Auto-style the text when:
@@ -315,17 +334,31 @@ export class PrintableShellCommand {
     const stream = options?.stream ?? stderr;
     // Note: we only need to modify top-level fields, so `structuredClone(…)`
     // would be overkill and can only cause performance issues.
-    const optionsCopy = { ...options };
-    optionsCopy.style ??=
-      options?.autoStyle !== "never" &&
-      (stream as { isTTY?: boolean }).isTTY === true
-        ? TTY_AUTO_STYLE
-        : undefined;
+    const optionsCopy = {
+      ...options,
+      style: this.#styleFromOptions(stream, options),
+    };
     const writable =
       stream instanceof Writable ? stream : Writable.fromWeb(stream);
     writable.write(this.getPrintableCommand(optionsCopy));
     writable.write("\n");
     return this;
+  }
+
+  #styleFromOptions(
+    stream: WriteStream | Writable,
+    options?: StreamPrintOptions,
+  ): StyleTextFormat | undefined {
+    if (options?.autoStyle === "never") {
+      return;
+    }
+    if (!(stream as { isTTY?: boolean }).isTTY) {
+      return;
+    }
+    if (NO_COLOR()) {
+      return;
+    }
+    return TTY_AUTO_STYLE;
   }
 
   #stdinSource: StdinSource | undefined;

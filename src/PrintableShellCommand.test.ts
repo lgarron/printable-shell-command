@@ -1,7 +1,7 @@
 import { expect, spyOn, test } from "bun:test";
 import assert from "node:assert";
 import { createWriteStream } from "node:fs";
-import { stderr, stdout } from "node:process";
+import { env, stderr, stdout } from "node:process";
 import { Path } from "path-class";
 import { PrintableShellCommand } from ".";
 
@@ -606,6 +606,8 @@ function resetMocks() {
   spyStderr.mockReset();
   globalThis.process.stdout.isTTY = false;
   globalThis.process.stderr.isTTY = false;
+  // biome-ignore lint/complexity/useLiteralKeys: TODO: https://github.com/biomejs/biome/discussions/7404
+  delete env["NO_COLOR"];
 }
 
 const PLAIN_ECHO: [string][] = [["echo \\\n  hi"], ["\n"]];
@@ -644,6 +646,26 @@ test.serial("tty (stderr)", async () => {
   expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
 });
 
+test.serial("NO_COLOR (stderr)", async () => {
+  resetMocks();
+
+  globalThis.process.stderr.isTTY = true;
+  new PrintableShellCommand("echo", ["hi"]).print();
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(BOLD_GRAY_ECHO);
+
+  // biome-ignore lint/complexity/useLiteralKeys: TODO: https://github.com/biomejs/biome/discussions/7404
+  env["NO_COLOR"] = "true";
+
+  new PrintableShellCommand("echo", ["hi"]).print();
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+  new PrintableShellCommand("echo", ["hi"]).print({ autoStyle: "never" });
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+  new PrintableShellCommand("echo", ["hi"]).print({ autoStyle: "tty" });
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+  new PrintableShellCommand("echo", ["hi"]).print({ style: ["gray", "bold"] });
+  expect(spyStderr.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+});
+
 test.serial("tty (stdout)", async () => {
   resetMocks();
 
@@ -675,6 +697,35 @@ test.serial("tty (stdout)", async () => {
   new PrintableShellCommand("echo", ["hi"]).print({
     stream: stdout,
     autoStyle: "never",
+  });
+  expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+});
+
+test.serial("NO_COLOR (stdout)", async () => {
+  resetMocks();
+
+  globalThis.process.stdout.isTTY = true;
+  new PrintableShellCommand("echo", ["hi"]).print({ stream: stdout });
+  expect(spyStdout.mock.calls.slice(-2)).toEqual(BOLD_GRAY_ECHO);
+
+  // biome-ignore lint/complexity/useLiteralKeys: TODO: https://github.com/biomejs/biome/discussions/7404
+  env["NO_COLOR"] = "true";
+
+  new PrintableShellCommand("echo", ["hi"]).print({ stream: stdout });
+  expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+  new PrintableShellCommand("echo", ["hi"]).print({
+    stream: stdout,
+    autoStyle: "never",
+  });
+  expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+  new PrintableShellCommand("echo", ["hi"]).print({
+    stream: stdout,
+    autoStyle: "tty",
+  });
+  expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
+  new PrintableShellCommand("echo", ["hi"]).print({
+    stream: stdout,
+    style: ["gray", "bold"],
   });
   expect(spyStdout.mock.calls.slice(-2)).toEqual(PLAIN_ECHO);
 });
