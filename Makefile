@@ -54,7 +54,7 @@ publish: setup
 
 .PHONY: ${REPO_COMMANDS}
 ${REPO_COMMANDS}:
-	repo $@
+	bun x -- bun-dx --package @lgarron-bin/repo repo -- $@
 
 .PHONY: setup
 setup:
