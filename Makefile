@@ -60,13 +60,15 @@ ${REPO_COMMANDS}:
 setup:
 	bun install --frozen-lockfile
 
+RM_RF = bun -e 'process.argv.slice(1).map(p => process.getBuiltinModule("node:fs").rmSync(p, {recursive: true, force: true, maxRetries: 5}))' --
+
 .PHONY: clean
 clean:
-	rm -rf ./dist/
+	${RM_RF} ./dist/
 
 .PHONY: reset
 reset: clean
-	rm -rf ./node_modules/
+	${RM_RF} ./node_modules/
 
 .PHONY: prepublishOnly
 prepublishOnly: clean check build
