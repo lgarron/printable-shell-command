@@ -1,3 +1,23 @@
+# 🏔️ Moved to Codeberg 🏔️
+
+This repo is now maintained at:
+
+<span style="font-size: 200%"><a href="https://codeberg.org/lgarron/printable-shell-command">https://codeberg.org/lgarron/printable-shell-command</a></span>
+
+Original README contents are below.
+
+<br>
+<br>
+<br>
+<br>
+
+--------
+
+<br>
+<br>
+<br>
+<br>
+
 # `printable-shell-command`
 
 A helper class to construct shell commands in a way that allows printing them.
